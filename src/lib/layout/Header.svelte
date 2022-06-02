@@ -1,4 +1,5 @@
 <script lang="ts">
+
   import {
     Collapse,
     Navbar,
@@ -7,24 +8,23 @@
     Nav,
     NavItem,
     NavLink,
-    Dropdown,
-    DropdownToggle,
-    DropdownMenu,
-    DropdownItem
-  } from 'sveltestrap';
-  import {User} from "../../services"
+  } from "sveltestrap";
+  import { User } from "../../services";
 
   let isOpen = false;
 
-  function handleUpdate(event) {
+  function handleUpdate(event: CustomEvent) {
     isOpen = event.detail.isOpen;
+  }
+  function logout() {
+    User.logout();
   }
 </script>
 
-<Navbar color="light" light expand="md">
+<Navbar color="dark" dark expand="md">
   <NavbarBrand href="#">
     {#if $User}
-      Hello, {$User.fullname}!
+      Hello, {$User.display_name}!
     {:else}
       Hello
     {/if}
@@ -34,17 +34,9 @@
       <Nav class="ms-auto" navbar>
         {#if $User}
           <NavItem>
-            <NavLink on:click={User.logout}>Change user</NavLink>
+            <NavLink on:click={logout}>Change user</NavLink>
           </NavItem>
-        <!--   <Dropdown nav inNavbar> -->
-        <!--     <DropdownToggle nav caret>Options</DropdownToggle> -->
-        <!--     <DropdownMenu end> -->
-        <!--       <DropdownItem>Option 1</DropdownItem> -->
-        <!--       <DropdownItem divider /> -->
-        <!--       <DropdownItem>Reset</DropdownItem> -->
-        <!--     </DropdownMenu> -->
-        <!--   </Dropdown> -->
         {/if}
-        </Nav>
+      </Nav>
     </Collapse>
 </Navbar>

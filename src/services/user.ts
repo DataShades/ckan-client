@@ -1,16 +1,34 @@
-import {writable} from "svelte/store"
+import { writable, get } from "svelte/store"
+import type { TUser } from "../types";
+import Project from './project'
+import Tauri from './tauri'
+import Toaster from "./toaster"
+import User from "./user"
+const { subscribe, set } = writable<TUser | null>(null)
 
-const {subscribe, set} = writable(null)
 const resolve = async portal => {
-  // FIXME: put real implementation here
-  await new Promise(c => setTimeout(c, 200))
-  if (!portal.token) return null
-
-  const user = {
-    fullname: portal.url,
+  if (!portal.url) {
+    Toaster.error("URL cannot be empty", "Login rejected");
+    return
   }
-  set(user);
-  return user;
+
+  if (!portal.token) {
+    Toaster.error("Token cannot be empty", "Login rejected");
+    return
+  }
+
+  try {
+    const user: TUser = await Tauri.invoke("login", {portal})
+    restore(user)
+    return user
+  } catch (e) {
+    Toaster.error(e, "Login failed");
+  }
+}
+
+const restore = async (user: TUser) => {
+  set(user)
+  await Project.restore(user);
 }
 
 const logout = () => {

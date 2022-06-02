@@ -8,7 +8,7 @@ type PortalDetails = {
   token: string,
 }
 const KEY = "ckan:portal"
-const defaultFactory = () => ({ url: null, token: null });
+const defaultFactory = () => ({ url: "", token: "" });
 
 const { subscribe, set, update, } = writable(defaultFactory());
 
@@ -18,9 +18,6 @@ const persist = async (portal: PortalDetails) => {
 
 Storage.getItem(KEY).then(portal => {
   set(portal as PortalDetails | null || defaultFactory());
-
-  // FIXME: remove autologin
-  User.resolve(portal)
 })
 
 export default {

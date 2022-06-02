@@ -59,7 +59,9 @@
         "height": 600,
         "resizable": true,
         "title": "CKAN desktop",
-        "width": 800
+      "width": 800,
+      "minWidth": 500,
+      "minHeight": 500
       }
     ]
   }
