@@ -3,13 +3,11 @@
     windows_subsystem = "windows"
 )]
 
-mod ckan;
 mod commands;
-mod context;
 
 fn main() {
     tauri::Builder::default()
-        .manage(ckan::ckan_state())
+        .manage(fdp::state::PortalState::default())
         .invoke_handler(tauri::generate_handler![
             commands::login,
             commands::list_projects,
