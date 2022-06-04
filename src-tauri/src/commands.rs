@@ -1,8 +1,8 @@
-use std::fs;
+
 use fdp::action::FdpClient;
 use fdp::state::PortalState;
 
-use fdp::types::{User, Project, Portal};
+use fdp::types::{User, Project, Portal, Source};
 
 #[tauri::command]
 pub fn login(state: tauri::State<PortalState>, portal: Portal) -> Result<User, String> {
@@ -18,10 +18,6 @@ pub fn list_projects(state: tauri::State<PortalState>, name: &str) -> Result<Vec
 
 
 #[tauri::command]
-pub fn read_source_path(path: String) ->  Result<Vec<i32>, String>{
-    match fs::read_dir(path) {
-        Err(err) => Err(err.to_string()),
-        _ => Ok(vec![1,2,3]),
-    }
-
+pub fn read_source_path(path: &str) ->  Result<Source, String>{
+    fdp::read_source_path(&path)
 }

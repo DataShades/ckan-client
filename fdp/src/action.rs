@@ -1,3 +1,4 @@
+
 use ckanapi::{Action, Params, CKAN};
 use crate::types::{User,Project, AvailableProjects};
 
@@ -20,6 +21,7 @@ impl FdpClient for CKAN {
         );
         match self.invoke(action).extract() {
             Some(projects) => projects,
+
             None => AvailableProjects {
                 results: vec![],
             },
