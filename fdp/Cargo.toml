@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ckanapi = { version = "0.1.0", path = "../../ckanapi" }
+ckanapi = { version = "0.1.1" }
 env_logger = "0.9.0"
 log = "0.4.17"
 serde = { version = "1.0.137", features = ["derive"] }
