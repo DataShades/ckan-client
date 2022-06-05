@@ -1,4 +1,4 @@
-use crate::{types::Portal, action::FdpClient};
+use crate::{action::FdpClient, types::Portal};
 
 use std::sync::Mutex;
 
@@ -17,11 +17,11 @@ impl PortalState {
 
     pub fn client(&self) -> Result<impl FdpClient, String> {
         match self.clone() {
-            Portal {token: Some(ref token), url: Some(ref url)} => {
-                Ok(ckanapi::CKAN::new(url).with_token(token))
-            },
+            Portal {
+                token: Some(ref token),
+                url: Some(ref url),
+            } => Ok(ckanapi::CKAN::new(url).with_token(token)),
             _ => Err("URL and token must be defined".into()),
-
         }
     }
 }

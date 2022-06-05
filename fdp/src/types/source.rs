@@ -27,7 +27,7 @@ impl Source {
         }
     }
 
-    fn metadata_path(&self) -> PathBuf {
+    pub fn metadata_path(&self) -> PathBuf {
         let mut path = self.path.clone();
         path.push("metadata.json");
         path
@@ -108,7 +108,7 @@ impl Dataset {
         }
     }
 
-    fn metadata_path(&self) -> PathBuf {
+    pub fn metadata_path(&self) -> PathBuf {
         let mut path = self.path.clone();
         path.push(format!("{}.json", &self.name));
         path
@@ -158,7 +158,7 @@ impl Resource {
         }
     }
 
-    fn metadata_path(&self) -> PathBuf {
+    pub fn metadata_path(&self) -> PathBuf {
         let mut path = self.path.clone();
         path.push(format!("{}.json", &self.name));
         path

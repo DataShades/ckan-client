@@ -2,11 +2,12 @@ mod source;
 
 use serde::{Deserialize, Serialize};
 
-pub use self::source::Source;
+pub use self::source::{Source, Dataset, Resource, Metadata};
 
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug,Deserialize)]
 pub struct AvailableProjects {
+    pub count: i32,
     pub results: Vec<Project>,
 }
 

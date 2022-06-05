@@ -27,13 +27,15 @@ const filter = async (name: string): Promise<TProject[]> => {
 }
 
 const restore = async (user: TUser) => {
-  const project: TProject | null = await Storage.getItem(`user:${user.id}:project`)
-  set(project)
+  const name: string | null = await Storage.getItem(`user:${user.id}:project`)
+  if (!name) { return }
+  const projects = await filter(name);
+  set(projects.find(p => p.name === name))
 }
 
-const choose = (project: TProject, user: TUser) => {
+const choose = (project: TProject|null, user: TUser) => {
   set(project)
-  Storage.setItem(`user:${user.id}:project`, project)
+  Storage.setItem(`user:${user.id}:project`, project && project.name)
 }
 
 const reset = (user: TUser) => {

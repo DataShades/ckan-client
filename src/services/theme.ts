@@ -2,14 +2,16 @@ import {writable} from "svelte/store";
 
 const {subscribe, update} = writable("sketchy")
 
-const next = () => {
-
+const change = (shift: number) => {
   update((current: string) => {
     const idx = themes.findIndex(v => v === current);
-    const newIdx = (idx + 1) % themes.length;
+    const newIdx = (idx + shift) % themes.length;
     return themes[newIdx];
   })
 }
+
+const next = () => change(1);
+const prev = () => change(themes.length-1);
 
 const themes = [
   "cerulean",
@@ -40,5 +42,5 @@ const themes = [
 ]
 
 export default {
-  subscribe, next
+  subscribe, next, prev
 }

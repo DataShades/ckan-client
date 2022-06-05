@@ -1,12 +1,13 @@
-import { writable, get } from "svelte/store"
-import type { TUser } from "../types";
+import { writable } from "svelte/store"
+import type { TUser,TPortal } from "../types";
 import Project from './project'
+import Source from './source'
 import Tauri from './tauri'
 import Toaster from "./toaster"
-import User from "./user"
+
 const { subscribe, set } = writable<TUser | null>(null)
 
-const resolve = async portal => {
+const resolve = async (portal: TPortal) => {
   if (!portal.url) {
     Toaster.error("URL cannot be empty", "Login rejected");
     return
@@ -19,7 +20,7 @@ const resolve = async portal => {
 
   try {
     const user: TUser = await Tauri.invoke("login", {portal})
-    restore(user)
+    await restore(user)
     return user
   } catch (e) {
     Toaster.error(e, "Login failed");
@@ -27,8 +28,10 @@ const resolve = async portal => {
 }
 
 const restore = async (user: TUser) => {
-  set(user)
   await Project.restore(user);
+  await Source.restore(user);
+  set(user)
+
 }
 
 const logout = () => {

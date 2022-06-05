@@ -1,7 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   import { Button, Icon, Input, InputGroup, InputGroupText, Spinner } from "sveltestrap";
-  import {Theme} from "../../services";
 
   const dispatch = createEventDispatcher();
 
@@ -16,9 +15,7 @@
 <div class="m-5">
   <InputGroup>
     <InputGroupText>
-      <div on:dblclick={Theme.next}>
-        <Icon name="globe"/>
-      </div>
+      <Icon name="globe"/>
     </InputGroupText>
     <Input type="text" placeholder="Portal URL" bind:value={url}/>
   </InputGroup>

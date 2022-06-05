@@ -39,7 +39,7 @@
           <NavItem>
             <Link class="nav-link" to="source">Source</Link>
           </NavItem>
-          {#if source}
+          {#if source.path}
             <NavItem>
               <Link class="nav-link" to="datasets">Datasets</Link>
             </NavItem>
@@ -52,7 +52,7 @@
 
       <Route path="/"><Home {project} {source} /></Route>
       <Route path="project"><Project chosen={project} user={$User} /></Route>
-      <Route path="source"><Source {project} /></Route>
+      <Route path="source"><Source/></Route>
       <Route path="datasets"><Datasets /></Route>
       <Route path="uploads"><Uploads /></Route>
     {:else}

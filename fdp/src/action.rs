@@ -1,6 +1,5 @@
-
+use crate::types::{AvailableProjects, Project, User};
 use ckanapi::{Action, Params, CKAN};
-use crate::types::{User,Project, AvailableProjects};
 
 pub trait FdpClient {
     fn user_info(&self) -> Option<User>;
@@ -19,18 +18,12 @@ impl FdpClient for CKAN {
             "nswflood_available_project_list",
             Params::Json(serde_json::json!({"name": name, "rows": 10, "fl": "id,name,title"})),
         );
-        match self.invoke(action).extract() {
-            Some(projects) => projects,
-
-            None => AvailableProjects {
-                results: vec![],
-            },
+        match self.invoke::<AvailableProjects>(action).extract() {
+            Some(projects) => projects.results,
+            None => Vec::new(),
         }
-        .results
     }
-
 }
-
 
 #[cfg(test)]
 mod tests {
