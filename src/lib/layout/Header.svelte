@@ -9,7 +9,7 @@
     NavItem,
     NavLink,
   } from "sveltestrap";
-  import { User, Theme } from "../../services";
+  import { User } from "../../services";
 
   let isOpen = false;
 
@@ -23,13 +23,11 @@
 
 <Navbar color="dark" dark expand="md">
   <NavbarBrand href="#">
-    <span on:mousewheel={e => e.deltaY > 0 ? Theme.next() : Theme.prev()}>
       {#if $User}
         Hello, {$User.display_name}!
       {:else}
         Hello
       {/if}
-    </span>
   </NavbarBrand>
   <NavbarToggler on:click={() => (isOpen = !isOpen)} />
     <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>

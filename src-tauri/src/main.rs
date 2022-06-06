@@ -15,6 +15,13 @@ fn main() {
             commands::save_root_metadata,
             commands::save_dataset_metadata,
             commands::save_resource_metadata,
+            commands::add_dataset,
+            commands::add_resource,
+
+            commands::show_submission,
+            commands::show_upload,
+            commands::register_upload,
+            commands::progress_upload,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

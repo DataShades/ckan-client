@@ -9,19 +9,16 @@
     CardSubtitle,
     CardText,
     CardTitle,
+    FormGroup,
+    Input,
+    InputGroup,
+    Label,
   } from "sveltestrap";
 
-  import { Source, Toaster } from "../../services";
+  import { Source } from "../../services";
 
-  const save = async (name: string) => {
-    try {
-      await Source.saveDataset(name);
-    } catch (e) {
-      Toaster.error(e, "Error");
-    }
-  };
+  let newDatasetName = "";
 </script>
-
 
 <div class="m-5">
   {#if !$Source.datasets.length}
@@ -41,7 +38,9 @@
           {:else}
             <CardText>
               This dataset does not have metadata file. Click
-              <Button on:click={() => save(dataset.name)}>this button</Button>
+              <Button on:click={() => Source.saveDataset(dataset.name)}
+                >this button</Button
+              >
               in order to create it.
             </CardText>
           {/if}
@@ -52,4 +51,13 @@
       </Card>
     {/each}
   {/if}
+
+  <FormGroup class="mt-5">
+    <InputGroup>
+      <Input placeholder="Dataset name" bind:value={newDatasetName} />
+      <Button on:click={() => Source.addDataset(newDatasetName)}>
+        Create
+      </Button>
+    </InputGroup>
+  </FormGroup>
 </div>

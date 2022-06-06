@@ -6,66 +6,52 @@
     CardBody,
     CardFooter,
     CardHeader,
-    CardSubtitle,
-    CardText,
     CardTitle,
+    FormGroup,
+    Input,
+    InputGroup,
   } from "sveltestrap";
 
-  import { Source, Toaster } from "../../services";
-
-  const save = async (dataset: string, name: string) => {
-    try {
-      await Source.saveResource(dataset, name);
-    } catch (e) {
-      Toaster.error(e, "Error");
-    }
-  };
+  import { Source, Flakes } from "../../services";
+  import { Resource } from "../component";
+  let names = {};
 </script>
 
 <div class="m-5">
   {#if !$Source.datasets.length}
     <Alert color="primary">The source contains no datasets.</Alert>
   {:else}
-    {#each $Source.datasets as dataset}
-      {#if dataset.resources.length}
-          <Card class="mb-3">
-            <CardHeader>
-              <CardTitle>{dataset.name}</CardTitle>
-            </CardHeader>
-            <CardBody>
-        {#each dataset.resources as resource}
-          <Card class="mb-3">
-            <CardHeader>
-              <CardTitle>{resource.name}</CardTitle>
-            </CardHeader>
-            <CardBody>
-              {#if resource.metadata}
-                <CardSubtitle>Metadata</CardSubtitle>
-                <CardText>
-                  <pre>{JSON.stringify(resource.metadata, null, 2)}</pre>
-                </CardText>
-              {:else}
-                <CardText>
-                  This resource does not have metadata file. Click
-                  <Button on:click={() => save(dataset.name, resource.name)}>
-                    this button
-                  </Button>
-                  in order to create it.
-                </CardText>
-              {/if}
-            </CardBody>
-            <CardFooter>
-              <Button>Button</Button>
-            </CardFooter>
-          </Card>
-        {/each}
-            </CardBody>
-            <CardFooter>
-              <Button>Button</Button>
-            </CardFooter>
-          </Card>
-
-      {/if}
+    {#each $Source.datasets.filter((d) => d.metadata) as dataset}
+      <Card class="mb-3">
+        <CardHeader>
+          <CardTitle>{dataset.name}</CardTitle>
+        </CardHeader>
+        <CardBody>
+          {#if dataset.resources.length}
+            {#each dataset.resources as resource}
+              <Resource {resource} {dataset} details={$Flakes.uploads[`${dataset.name}/${resource.name}`]}/>
+            {/each}
+          {:else}
+            This dataset has no resources yet.
+          {/if}
+        </CardBody>
+        <CardFooter>
+          <FormGroup class="mt-1">
+            <InputGroup>
+              <Input
+                placeholder="Resource name"
+                bind:value={names[dataset.name]}
+              />
+              <Button
+                on:click={() =>
+                  Source.addResource(dataset.name, names[dataset.name])}
+              >
+                Create
+              </Button>
+            </InputGroup>
+          </FormGroup>
+        </CardFooter>
+      </Card>
     {/each}
   {/if}
 </div>

@@ -39,7 +39,7 @@
           <NavItem>
             <Link class="nav-link" to="source">Source</Link>
           </NavItem>
-          {#if source.path}
+          {#if source.path && source.metadata}
             <NavItem>
               <Link class="nav-link" to="datasets">Datasets</Link>
             </NavItem>

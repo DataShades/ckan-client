@@ -50,6 +50,22 @@ impl Source {
                 .collect(),
         };
     }
+
+    pub fn add_dataset(&mut self, name: &str) -> std::io::Result<()> {
+        let mut path = self.path.clone();
+        path.push(name);
+        fs::create_dir(path)?;
+        self.gather_datasets();
+        Ok(())
+    }
+    pub fn get_mut_dataset(&mut self, name: &str) -> Option<&mut Dataset> {
+        self.datasets.iter_mut().find(|d| d.name == name)
+    }
+
+    pub fn get_dataset(&self, name: &str) -> Option<&Dataset> {
+        self.datasets.iter().find(|d| d.name == name)
+    }
+
 }
 
 fn entry_tuples(e: DirEntry, resource: bool) -> Option<(String, String)> {
@@ -133,6 +149,22 @@ impl Dataset {
                 .collect(),
         };
     }
+    pub fn add_resource(&mut self, name: &str) -> std::io::Result<()> {
+        let mut path = self.path.clone();
+        path.push(&self.name);
+        path.push(name);
+        if path.exists() {
+            Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "File already exists"))
+        } else {
+            fs::write(path, "")?;
+            self.gather_resources();
+            Ok(())
+        }
+    }
+    pub fn get_resoure(&self, name: &str) -> Option<&Resource> {
+        self.resources.iter().find(|d| d.name == name)
+    }
+
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -166,6 +198,12 @@ impl Resource {
 
     fn refresh_metadata(&mut self) {
         self.metadata = Metadata::from(&self.metadata_path());
+    }
+
+    pub fn size(&self) -> u64 {
+        let mut path = self.path.clone();
+        path.push(&self.name);
+        fs::metadata(path).map(|m| m.len()).unwrap_or(0)
     }
 }
 
@@ -205,7 +243,7 @@ impl Metadata {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pretty_assertions::assert_eq;
+    // use pretty_assertions::assert_eq;
     use serde_json::json;
 
     struct Dir {
@@ -351,5 +389,24 @@ mod tests {
         fs::write(&path, r#""test""#).unwrap();
         source.refresh_metadata();
         assert_eq!(source.metadata, Metadata::Object(json!("test")));
+    }
+
+    #[test]
+    fn test_add_dataset_to_source() {
+        let dir = Dir::new("/tmp/fdp/rust/test/test_add_dataset_to_source".into());
+        let mut source = Source::new(&dir.path).unwrap();
+        assert_eq!(0, source.datasets.len());
+        source.add_dataset("test").unwrap();
+        assert_eq!(1, source.datasets.len());
+    }
+    #[test]
+    fn test_add_resource_to_dataset() {
+        let dir = Dir::new("/tmp/fdp/rust/test/test_add_resource_to_dataset".into());
+        let mut source = Source::new(&dir.path).unwrap();
+        source.add_dataset("test").unwrap();
+        let dataset = source.get_mut_dataset("test").unwrap();
+        assert_eq!(0, dataset.resources.len());
+        dataset.add_resource("test.txt").unwrap();
+        assert_eq!(1, dataset.resources.len());
     }
 }

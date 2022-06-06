@@ -19,6 +19,33 @@ pub fn save_root_metadata(path: &str, metadata: Value) -> Result<(), String> {
     }
 }
 
+pub fn add_dataset(path: &str, name: &str) -> Result<(), String> {
+    let mut source = read_source_path(&path)?;
+    match source.add_dataset(name) {
+        Ok(_) => Ok(()),
+        Err(err) => {
+            log::error!("{}", err);
+            Err("Dataset cannot be created".into())
+        }
+    }
+}
+
+pub fn add_resource(path: &str, dataset: &str, name: &str) -> Result<(), String> {
+    let mut source = read_source_path(&path)?;
+    match source.get_mut_dataset(dataset) {
+        None => Ok(()),
+        Some(dataset) => {
+            match dataset.add_resource(name) {
+                Ok(_) => Ok(()),
+                Err(err) => {
+                    log::error!("{}", err);
+                    Err("Resource cannot be created".into())
+                }
+            }
+        }
+    }
+}
+
 pub fn save_dataset_metadata(path: &str, name: &str, metadata: Value) -> Result<(), String> {
     match read_source_path(&path)?
         .datasets

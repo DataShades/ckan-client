@@ -1,7 +1,8 @@
 import { writable } from "svelte/store"
-import type { TUser,TPortal } from "../types";
+import type { TUser, TPortal } from "../types";
 import Project from './project'
 import Source from './source'
+import Submission from './submission'
 import Tauri from './tauri'
 import Toaster from "./toaster"
 
@@ -19,7 +20,7 @@ const resolve = async (portal: TPortal) => {
   }
 
   try {
-    const user: TUser = await Tauri.invoke("login", {portal})
+    const user: TUser = await Tauri.invoke("login", { portal })
     await restore(user)
     return user
   } catch (e) {
@@ -31,7 +32,7 @@ const restore = async (user: TUser) => {
   await Project.restore(user);
   await Source.restore(user);
   set(user)
-
+  await Submission.refresh();
 }
 
 const logout = () => {

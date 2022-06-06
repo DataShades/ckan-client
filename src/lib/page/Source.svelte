@@ -28,7 +28,7 @@
 <FormGroup floating class="m-5">
   <Input placeholder="Path to the submission source" bind:value={path} />
   <Label slot="label">Path to the submission source</Label>
-  <Button on:click={checkPath} class="mt-2">Synchronize</Button>
+  <Button on:click={checkPath}>Synchronize</Button>
 </FormGroup>
 
 {#if error}

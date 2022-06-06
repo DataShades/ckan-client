@@ -29,3 +29,26 @@ pub struct Portal {
     pub url: Option<String>,
     pub token: Option<String>,
 }
+
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct RegisteredUpload {
+    pub id: String,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ProgressedUpload {
+    pub id: String,
+    pub data: UploadData,
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct UploadData {
+    pub key: String,
+    pub size: u64,
+    pub dataset: String,
+    pub name: String,
+    pub completed: bool,
+    pub bytes_uploaded: u64,
+
+}
