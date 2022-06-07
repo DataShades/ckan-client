@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Container, Nav, NavItem } from "sveltestrap";
-  import { Router, Link, Route, navigate } from "svelte-routing";
+  import { Router, Link, Route, navigate, link } from "svelte-routing";
   import { UserForm, Home, Project, Datasets, Uploads, Source } from "../page";
   import {
     Portal,
@@ -23,6 +23,9 @@
       navigate("/");
     }
   };
+
+  $: projectSelected = !!project;
+  $: sourceReady = !!(source && source.path && source.metadata);
 </script>
 
 <Container fluid class="flex-grow-1 mt-2">
@@ -33,26 +36,46 @@
           <Link class="nav-link" to="/">Hint</Link>
         </NavItem>
         <NavItem>
-          <Link class="nav-link" to="project">Project</Link>
+          <Link class="nav-link" to="/project">Project</Link>
         </NavItem>
-        {#if project}
-          <NavItem>
-            <Link class="nav-link" to="source">Source</Link>
-          </NavItem>
-          {#if source.path && source.metadata}
-            <NavItem>
-              <Link class="nav-link" to="datasets">Datasets</Link>
-            </NavItem>
-            <NavItem>
-              <Link class="nav-link" to="uploads">Uploads</Link>
-            </NavItem>
-          {/if}
-        {/if}
+        <NavItem>
+          <a
+            use:link
+            class:nav-link={true}
+            class:disabled={!projectSelected}
+            href="/source"
+            title="Requires a Project"
+          >
+            Source
+          </a>
+        </NavItem>
+        <NavItem>
+          <a
+            use:link
+            class:nav-link={true}
+            class:disabled={!projectSelected || !sourceReady}
+            href="/datasets"
+            title="Requires a Source"
+          >
+            Datasets
+          </a>
+        </NavItem>
+        <NavItem>
+          <a
+            use:link
+            class:nav-link={true}
+            class:disabled={!projectSelected || !sourceReady}
+            href="/uploads"
+            title="Requires a Source"
+          >
+            Uploads
+          </a>
+        </NavItem>
       </Nav>
 
       <Route path="/"><Home {project} {source} /></Route>
       <Route path="project"><Project chosen={project} user={$User} /></Route>
-      <Route path="source"><Source/></Route>
+      <Route path="source"><Source /></Route>
       <Route path="datasets"><Datasets /></Route>
       <Route path="uploads"><Uploads /></Route>
     {:else}

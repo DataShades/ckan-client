@@ -1,5 +1,5 @@
 <script lang="ts">
-  import "./assets/bootswatch/sketchy.min.css";
+  import "./assets/bootswatch/quartz.min.css";
   import "bootstrap-icons/font/bootstrap-icons.css";
   import "./styles/styles.css";
 

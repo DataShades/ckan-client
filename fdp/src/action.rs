@@ -29,6 +29,7 @@ impl FdpClient for CKAN {
             "nswflood_available_project_list",
             Params::Json(serde_json::json!({"name": name, "rows": 10, "fl": "id,name,title"})),
         );
+
         match self.invoke::<AvailableProjects>(action).extract() {
             Some(projects) => projects.results,
             None => Vec::new(),
