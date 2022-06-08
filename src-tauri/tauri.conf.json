@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "OpenData Submission",
+    "productName": "CKAN Client",
     "version": "0.1.0"
   },
   "tauri": {
