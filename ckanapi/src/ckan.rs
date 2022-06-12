@@ -6,8 +6,38 @@ use reqwest::blocking::{
 };
 
 use serde::Deserialize;
-use serde_json::Value;
 
+/// Client for the CKAN API.
+///
+/// It can be created from the string with a URL of the CKAN
+/// application. Optionally, API Token can be used to switch the client into an
+/// authenticated mode. Without a token, all requrest are made on behalf of an
+/// anonymous user.
+///
+/// The result of an API call deserialized into the specified type.
+///
+/// ```no_run
+/// # use ckanapi::{CKAN, Action, Params};
+/// # use serde::Deserialize;
+/// #[derive(Deserialize, Debug)]
+/// struct StatusShow {
+///     site_title: String,
+/// }
+///
+/// # fn main() {
+/// let mut client = CKAN::from("https://demo.ckan.org");
+/// let action = Action::new("status_show");
+///
+/// match client.invoke(action, Params::Empty).extract() {
+///     Some(StatusShow { site_title }) => assert_eq!("CKAN Demo", site_title),
+///     None => panic!("CKAN Demo portal is not available")
+/// }
+/// # }
+/// ```
+///
+/// If the application mounted under non-root path, this must be reflected in
+/// the URL.
+///
 #[derive(Debug)]
 pub struct CKAN {
     url: String,
@@ -16,32 +46,59 @@ pub struct CKAN {
 }
 
 impl CKAN {
-    pub fn new(url: &str) -> Self {
-        CKAN {
-            url: url.trim_matches('/').to_owned(),
-            client: Client::new(),
-            token: None,
-        }
+    /// Check if the client is anonymous(without an API Token).
+    ///
+    /// # Examples
+    /// ```
+    /// # let mut client = ckanapi::CKAN::from("http://demo.ckan.org");
+    /// assert!(client.is_anon());
+    ///
+    /// client.login("my-secret-token");
+    /// assert!(!client.is_anon());
+    /// ```
+    pub fn is_anon(&self) -> bool {
+        self.token.is_none()
     }
 
-    pub fn with_token(self, token: &str) -> Self {
-        CKAN {
-            token: Some(token.into()),
-            ..self
-        }
-    }
-    pub fn url(&self) -> &str {
-        &self.url
+    /// Set the API Token that will be used for authorization.
+    ///
+    /// # Examples
+    /// ```
+    /// # let mut client = ckanapi::CKAN::from("http://demo.ckan.org");
+    /// client.login("my-secret-token");
+    /// assert!(!client.is_anon());
+    /// ```
+    pub fn login<T: Into<String>>(&mut self, token: T) {
+        self.token.replace(token.into());
     }
 
-    pub fn invoke<T: for<'de> Deserialize<'de>>(&self, action: Action) -> Response<T> {
-        let url = format!("{}/api/action/{}", self.url, &action.name);
+    /// Remove and return current API Token.
+    ///
+    /// # Examples
+    /// ```
+    /// # let mut client = ckanapi::CKAN::from("http://demo.ckan.org");
+    /// client.login("token");
+    /// let token = client.logout();
+    ///
+    /// assert!(client.is_anon());
+    /// assert_eq!(Some("token".to_string()), token);
+    /// ```
+    pub fn logout(&mut self) -> Option<String> {
+        self.token.take()
+    }
+
+    pub fn invoke<T: for<'de> Deserialize<'de>>(
+        &self,
+        action: Action,
+        params: Params,
+    ) -> Response<T> {
+        let url = format!("{}{}", self.url, action.to_path());
         let mut req = self.client.post(url);
         if let Some(token) = &self.token {
             req = req.header(reqwest::header::AUTHORIZATION, token);
         }
 
-        req = match action.params {
+        req = match params {
             Params::Empty => req,
             Params::Multipart(plain, files, blobs) => {
                 let mut form = Form::new();
@@ -81,6 +138,24 @@ impl CKAN {
     }
 }
 
+impl<T> From<T> for CKAN
+where
+    T: Into<String>,
+{
+    fn from(url: T) -> CKAN {
+        let mut url = url.into();
+        if !url.ends_with('/') {
+            url.push('/');
+        }
+
+        CKAN {
+            url,
+            client: Client::new(),
+            token: None,
+        }
+    }
+}
+
 #[derive(Deserialize, Debug)]
 #[serde(untagged)]
 pub enum Response<T> {
@@ -113,20 +188,29 @@ pub struct Success<T> {
 #[derive(Deserialize, Debug)]
 pub struct Fail {
     pub help: String,
-    pub error: Value,
+    pub error: serde_json::Value,
 }
 
 #[derive(Debug)]
 pub struct Action {
     pub name: String,
-    pub params: Params,
+    pub version: u8,
 }
 
 impl Action {
-    pub fn new(name: &str, params: Params) -> Self {
-        Action {
+    fn to_path(&self) -> String {
+        format!("api/{}/action/{}", self.version, &self.name)
+    }
+}
+
+impl<T> From<T> for Action
+where
+    T: Into<String>,
+{
+    fn from(name: T) -> Self {
+        Self {
             name: name.into(),
-            params,
+            version: 3,
         }
     }
 }
@@ -139,29 +223,20 @@ pub enum Params {
         HashMap<String, String>,
         HashMap<String, Vec<u8>>,
     ),
-    Json(Value),
+    Json(serde_json::Value),
 }
 
 #[cfg(test)]
 #[allow(unused_variables)]
 mod tests {
-    // use super::*;
+    use super::*;
 
-    //     #[test]
-    //     fn test_name() {
-    //         let ckan = CKAN::new("http://localhost:5000");
+    #[test]
+    fn test_creation_with_any_string() {
+        _ = CKAN::from("http://localhost:5000");
+        _ = CKAN::from("http://localhost:5000".to_string());
+    }
 
-    //         let mut plain: HashMap<String, String> = HashMap::new();
-    //         plain.insert("rows".into(), "0".into());
-    //         plain.insert("fl".into(), "id".into());
-
-    //         let action = Action::new(
-    //             "package_search",
-    //             // Params::Json(serde_json::json!({"rows": 1, "fl": "id"})),
-    //             Params::Multipart(plain, HashMap::new()),
-    //         );
-
-    //         let result: Response<Value> = ckan.invoke(action);
-    //         // dbg!(result);
-    //     }
+    #[tokio::test]
+    async fn test_async() {}
 }
