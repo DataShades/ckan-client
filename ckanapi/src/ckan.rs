@@ -237,6 +237,12 @@ mod tests {
         _ = CKAN::from("http://localhost:5000".to_string());
     }
 
+    #[test]
+    fn test_status_show() {
+        let client = CKAN::from("http://localhost:5000");
+        let result = client.invoke(Action::from("status_show"), Params::Empty).extract();
+        dbg!(result);
+    }
     #[tokio::test]
     async fn test_async() {}
 }
