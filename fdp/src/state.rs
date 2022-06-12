@@ -20,7 +20,11 @@ impl PortalState {
             Portal {
                 token: Some(ref token),
                 url: Some(ref url),
-            } => Ok(ckanapi::CKAN::new(url).with_token(token)),
+            } => {
+                let mut client = ckanapi::CKAN::from(url);
+                client.login(token);
+                Ok(client)
+            }
             _ => Err("URL and token must be defined".into()),
         }
     }
