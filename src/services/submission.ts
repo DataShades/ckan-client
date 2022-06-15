@@ -16,8 +16,6 @@ const refresh = async () => {
   }
 }
 
-const swap = (upload: any) => store.update(items => items.map(i => i.id === upload.id ? upload : i))
-
 const registerUpload = async (dataset: string, name: string) => {
   await Tauri.invoke("register_upload", { path: get(Source).path, dataset, name }).catch(e => Toaster.error(e, "Error"))
   await refresh();
@@ -32,6 +30,24 @@ const progressUpload = async (dataset: string, name: string, part: number) => {
   await refresh();
 }
 
+const validateDataset = async (name: string) => {
+  const source = get(Source)
+  if (source) {
+    await Tauri.invoke("validate_dataset", { path: source.path, name }).catch(e => Toaster.error(e, "Error"))
+    await Source.change(source.path);
+    refresh();
+  }
+
+}
+
+const validateResource = async (dataset: string, name: string) => {
+  const source = get(Source)
+  if (source) {
+    await Tauri.invoke("validate_resource", { path: source.path, dataset, name }).catch(e => Toaster.error(e, "Error"))
+    await Source.change(source.path);
+  }
+}
+
 
 const byType = (type: string) => get(store).filter(i => i.extras.type === type);
 
@@ -41,4 +57,7 @@ export default {
   byType,
   registerUpload,
   progressUpload,
+  validateDataset,
+  validateResource,
+
 }

@@ -1,5 +1,13 @@
 <script lang="ts">
-  import { Alert, Button, FormGroup, Input, Label } from "sveltestrap";
+  import {
+    Alert,
+    Button,
+    FormGroup,
+    Input,
+    InputGroup,
+    InputGroupText,
+    Label,
+  } from "sveltestrap";
   import { Source, Toaster } from "../../services";
 
   let path = $Source.path;
@@ -23,12 +31,33 @@
       Toaster.error(e, "Error");
     }
   };
+  const browse = async () => {
+    let p = await Source.browse();
+    if (p !== null) {
+      path = p;
+      checkPath();
+
+    }
+  };
 </script>
 
-<FormGroup floating class="m-5">
-  <Input placeholder="Path to the submission source" bind:value={path} />
-  <Label slot="label">Path to the submission source</Label>
+<FormGroup class="m-5">
+  <InputGroup>
+    <Button on:click={browse}>Browse</Button>
+    <Input placeholder="Path to the submission source" bind:value={path} />
+  </InputGroup>
   <Button on:click={checkPath} class="mt-2">Synchronize</Button>
+  {#if $Source.path}
+    <Button on:click={() => Source.open()} class="mt-2">
+      Open directory
+    </Button>
+  {/if}
+  {#if $Source.metadata}
+    <Button
+      on:click={() => Source.open("metadata.json")}
+      class="mt-2">Open metadata</Button
+    >
+  {/if}
 </FormGroup>
 
 {#if error}
@@ -49,7 +78,6 @@
     <br />
     If metadata file exists, make sure it contains a valid JSON object -
     <code>{"{}"}</code>
-
   </Alert>
 {:else if $Source.path && $Source.metadata}
   <div class="m-5">

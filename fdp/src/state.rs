@@ -10,12 +10,12 @@ impl PortalState {
         *self.0.lock().unwrap() = portal;
     }
 
-    pub fn clone(&self) -> Portal {
+    fn clone(&self) -> Portal {
         let portal = self.0.lock().unwrap();
         portal.clone()
     }
 
-    pub fn client(&self) -> Result<impl FdpClient, String> {
+    pub fn client(&self) -> crate::Result<impl FdpClient> {
         match self.clone() {
             Portal {
                 token: Some(ref token),

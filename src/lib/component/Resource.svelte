@@ -1,8 +1,6 @@
 <script lang="ts">
   import {
     Button,
-    ButtonGroup,
-    Icon,
     Card,
     CardBody,
     CardFooter,
@@ -10,31 +8,12 @@
     CardSubtitle,
     CardText,
     CardTitle,
-    Progress,
   } from "sveltestrap";
   import type { TResource, TDataset } from "../../types";
-  import { Source, Submission } from "../../services";
+  import { Source } from "../../services";
 
   export let resource: TResource;
   export let dataset: TDataset;
-  export let details: any;
-
-  let pending = false;
-  const register = async () => {
-    pending = true;
-    await Submission.registerUpload(dataset.name, resource.name);
-    pending = false;
-  };
-
-  const upload = async () => {
-    pending = true;
-    await Submission.progressUpload(
-      dataset.name,
-      resource.name,
-      details.data.chunks_uploaded + 1
-    );
-    pending = false;
-  };
 </script>
 
 <Card class="mb-3">
@@ -58,37 +37,17 @@
         in order to create it.
       </CardText>
     {/if}
-    {#if details}
-      <Progress
-        striped
-        animated={pending}
-        color={details.data.completed ? "success" : "info"}
-        value={((details.data.bytes_uploaded + 1) / (details.data.size + 1)) *
-          100}
-      >
-      </Progress>
-    {/if}
   </CardBody>
   <CardFooter>
-    <ButtonGroup disabled size="sm" class="float-end">
+    <Button on:click={() => Source.open(dataset.name, resource.name)}>
+      Open file
+    </Button>
+    {#if resource.metadata}
       <Button
-        disabled={!resource.metadata || details || pending}
-        on:click={register}
-        title="Prepare for upload"
+        on:click={() => Source.open(dataset.name, resource.name + ".json")}
       >
-        <Icon name="cloud-check" />
+        Open metadata
       </Button>
-
-      <Button
-        disabled={!details || pending || details.data.completed}
-        on:click={upload}
-        title="Start/resume upload"
-      >
-        <Icon name="cloud-upload" />
-      </Button>
-      <Button disabled title="Pause upload">
-        <Icon name="pause-circle" />
-      </Button>
-    </ButtonGroup>
+    {/if}
   </CardFooter>
 </Card>

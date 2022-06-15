@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import Toaster from "./toaster";
 import type { TProject, TUser } from "../types";
 import Storage from "./storage";
 import Tauri from "./tauri"
@@ -35,7 +36,9 @@ const restore = async (user: TUser) => {
 
 const choose = (project: TProject|null, user: TUser) => {
   set(project)
-  Storage.setItem(`user:${user.id}:project`, project && project.name)
+    Storage.setItem(`user:${user.id}:project`, project && project.name);
+    Tauri.invoke("project_set", {"id": project && project.id}).catch(err => Toaster.error(err, "Error"))
+
 }
 
 const reset = (user: TUser) => {

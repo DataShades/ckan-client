@@ -90,6 +90,7 @@ impl CKAN {
         let url = format!("{}{}", self.url, action.into().to_path());
         let mut req = self.client.post(url);
         if let Some(token) = &self.token {
+            log::debug!("Set token: {}", token);
             req = req.header(reqwest::header::AUTHORIZATION, token);
         }
         RequestBuilder { request: req }
@@ -193,11 +194,13 @@ impl From<reqwest::Error> for CKANError {
 pub enum Response<T> {
     Result(Success<T>),
     Error(Fail),
+    Exception(String),
 }
 
 impl<T: std::fmt::Debug> Response<T> {
     pub fn extract(self) -> Result<T, CKANError> {
         match self {
+            Response::Exception(msg) => Err(CKANError::Request(msg)),
             Response::Result(Success { result, .. }) => Ok(result),
             Response::Error(Fail { mut error, .. }) => {
                 match error["__type"] {
@@ -490,6 +493,21 @@ mod tests {
             }
             _ => panic!("Unexpected error: {:?}", err),
         }
+    }
+
+    #[test]
+    fn test_error() {
+        env_logger::init();
+        let mut ckan = CKAN::from("http://localhost:5000");
+        ckan.login("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJ0VUJSdWptc1hrNGFxX0JnOVVsUW4xQlBwR1ZYeTBIRk8tb2Y2TFR3VW1qaGxvcFYzbk1yZ0VIRTJiQjZpMm83NU5DRU5HWTV4TnFmaV9VaCIsImlhdCI6MTY1NDA5NTEyNX0.Nl1IM48b-dQhnh6COyZjkgmwnfgjZDCCGP5S-OtwRSc");
+
+        let result: serde_json::Value = ckan.build("nswflood_me")
+            .params(Params::Empty)
+            .send().unwrap()
+            .extract().unwrap();
+
+
+        dbg!(result);
     }
 
     #[tokio::test]

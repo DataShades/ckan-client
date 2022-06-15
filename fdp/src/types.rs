@@ -1,11 +1,12 @@
 mod source;
 
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 
 pub use self::source::{Source, Dataset, Resource, Metadata};
 
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug,Deserialize, Serialize)]
 pub struct AvailableProjects {
     pub count: i32,
     pub results: Vec<Project>,
@@ -32,6 +33,7 @@ pub struct Portal {
 
 
 #[derive(Debug, Deserialize, Serialize)]
+
 pub struct RegisteredUpload {
     pub id: String,
 }
@@ -51,4 +53,10 @@ pub struct UploadData {
     pub completed: bool,
     pub bytes_uploaded: u64,
 
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+pub struct ValidationResult {
+    pub data: Value,
+    pub errors: Value,
 }

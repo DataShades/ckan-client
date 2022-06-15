@@ -1,4 +1,5 @@
 #![doc = include_str!("../README.md")]
 mod ckan;
 
-pub use ckan::{CKAN, Action, Params, MultipartField};
+
+pub use ckan::{CKAN, Action, Params, MultipartField, CKANError};

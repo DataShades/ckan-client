@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
+use std::ffi::OsStr;
 use std::fs::{self, DirEntry};
 use std::path::PathBuf;
 
@@ -11,8 +12,8 @@ pub struct Source {
 }
 
 impl Source {
-    pub fn new(path: &str) -> Option<Self> {
-        let path = PathBuf::from(path);
+    pub fn new<T: AsRef<OsStr>>(path: T) -> Option<Self> {
+        let path = PathBuf::from(path.as_ref());
         if path.is_dir() {
             let mut source = Source {
                 path,
@@ -36,6 +37,7 @@ impl Source {
     fn refresh_metadata(&mut self) {
         self.metadata = Metadata::from(&self.metadata_path());
     }
+
     fn gather_datasets(&mut self) {
         let path = &self.path;
         self.datasets = match fs::read_dir(path) {
@@ -58,14 +60,14 @@ impl Source {
         self.gather_datasets();
         Ok(())
     }
-    pub fn get_mut_dataset(&mut self, name: &str) -> Option<&mut Dataset> {
+
+    pub fn get_dataset_mut(&mut self, name: &str) -> Option<&mut Dataset> {
         self.datasets.iter_mut().find(|d| d.name == name)
     }
 
     pub fn get_dataset(&self, name: &str) -> Option<&Dataset> {
         self.datasets.iter().find(|d| d.name == name)
     }
-
 }
 
 fn entry_tuples(e: DirEntry, resource: bool) -> Option<(String, String)> {
@@ -154,7 +156,10 @@ impl Dataset {
         path.push(&self.name);
         path.push(name);
         if path.exists() {
-            Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "File already exists"))
+            Err(std::io::Error::new(
+                std::io::ErrorKind::AlreadyExists,
+                "File already exists",
+            ))
         } else {
             fs::write(path, "")?;
             self.gather_resources();
@@ -163,6 +168,9 @@ impl Dataset {
     }
     pub fn get_resoure(&self, name: &str) -> Option<&Resource> {
         self.resources.iter().find(|d| d.name == name)
+    }
+    pub fn get_resoure_mut(&mut self, name: &str) -> Option<&mut Resource> {
+        self.resources.iter_mut().find(|d| d.name == name)
     }
 
 }
@@ -215,19 +223,43 @@ pub enum Metadata {
 }
 
 impl Metadata {
-    pub fn write(&self, path: &PathBuf) -> Result<(), std::io::Error> {
+    pub fn write<P: AsRef<OsStr>>(&self, path: &P) -> Result<(), std::io::Error> {
         match self {
-            Metadata::Empty => {
-                _ = fs::remove_file(path);
-                Ok(())
-            }
+            Metadata::Empty => fs::remove_file(path.as_ref()),
             Metadata::Object(v) => {
                 let contents = serde_json::to_string_pretty(v).unwrap();
-                fs::write(path, contents)
+                fs::write(path.as_ref(), contents)
             }
         }
     }
-    pub fn from(path: &PathBuf) -> Self {
+    pub fn patch(&mut self, patch: Value) {
+        if let (Self::Object(Value::Object(obj)), Value::Object(ref mut patch)) = (self, patch) {
+            obj.append(patch);
+        }
+    }
+}
+impl Default for Metadata {
+    fn default() -> Self {
+        Self::Object(json!({
+            "title": "Title",
+            "name": "dataset",
+            "access_level": "open",
+            "dataset_status": "draft",
+            "publication_date": "2022-01-01",
+            "author": "Name",
+            "theme": "Emergency Management",
+            "language": "en",
+            "license_id": "unspecified",
+            "notes": "Description",
+            "dataset_type": "1",
+            "update_freq": "daily",
+            "flood_studies": "<id>",
+            "owner_org": "<id>"
+        }))
+    }
+}
+impl From<&PathBuf> for Metadata {
+    fn from(path: &PathBuf) -> Self {
         if path.is_file() {
             let content = fs::read_to_string(path.as_path()).unwrap();
             match serde_json::from_str(&content) {
@@ -404,7 +436,7 @@ mod tests {
         let dir = Dir::new("/tmp/fdp/rust/test/test_add_resource_to_dataset".into());
         let mut source = Source::new(&dir.path).unwrap();
         source.add_dataset("test").unwrap();
-        let dataset = source.get_mut_dataset("test").unwrap();
+        let dataset = source.get_dataset_mut("test").unwrap();
         assert_eq!(0, dataset.resources.len());
         dataset.add_resource("test.txt").unwrap();
         assert_eq!(1, dataset.resources.len());

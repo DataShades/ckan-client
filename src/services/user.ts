@@ -24,6 +24,7 @@ const resolve = async (portal: TPortal) => {
     await restore(user)
     return user
   } catch (e) {
+    console.log(e)
     Toaster.error(e, "Login failed");
   }
 }

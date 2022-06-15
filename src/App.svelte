@@ -31,10 +31,15 @@
 
 <script lang="ts">
   // import "./assets/bootswatch/quartz.min.css";
+  import { onMount } from "svelte";
   import "bootstrap-icons/font/bootstrap-icons.css";
   import "./styles/styles.css";
-
+  import { Source, Tauri } from "./services";
   import { Header, Body, Footer } from "./lib/layout";
+
+  onMount(async () => {
+    return Tauri.window.listen("tauri://focus", () => Source.refresh());
+  });
 </script>
 
 <svelte:head>
