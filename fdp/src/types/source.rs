@@ -180,6 +180,7 @@ pub struct Resource {
     pub path: PathBuf,
     pub name: String,
     pub metadata: Metadata,
+    pub size: u64,
 }
 impl Resource {
     pub fn new(path: &str, name: &str) -> Option<Self> {
@@ -190,8 +191,10 @@ impl Resource {
                 name: name.to_owned(),
                 path,
                 metadata: Metadata::Empty,
+                size: 0
             };
             resource.refresh_metadata();
+            resource.size = resource.size();
             Some(resource)
         } else {
             None

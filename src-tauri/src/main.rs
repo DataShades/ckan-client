@@ -11,6 +11,7 @@ fn main() {
     tauri::Builder::default()
         .manage(PortalState::default())
         .invoke_handler(tauri::generate_handler![
+            commands::submission_finalize,
             commands::login,
             commands::list_projects,
             commands::project_set,

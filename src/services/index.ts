@@ -6,6 +6,7 @@ import Storage from "./storage";
 import Project from "./project";
 import Source from "./source";
 import Submission from "./submission";
+import Queue from "./queue";
 import Flakes from "./flakes";
 
 export {
@@ -17,5 +18,6 @@ export {
   Project,
   Source,
   Submission,
+  Queue,
   Flakes,
 }

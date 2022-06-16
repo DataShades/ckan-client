@@ -1,4 +1,4 @@
-use reqwest::blocking::{
+use reqwest::{
     multipart::{Form, Part},
     Client,
 };
@@ -98,8 +98,9 @@ impl CKAN {
 }
 
 pub struct RequestBuilder {
-    request: reqwest::blocking::RequestBuilder,
+    request: reqwest::RequestBuilder,
 }
+
 impl RequestBuilder {
     pub fn params(mut self, params: Params) -> Self {
         self.request = match params {
@@ -110,16 +111,9 @@ impl RequestBuilder {
                 for (k, v) in fields {
                     form = match v {
                         MultipartField::Literal(v) => form.text(k, v),
-                        MultipartField::Filepath(v) => {
-                            let os = std::ffi::OsString::from(&v);
-
-                            if std::path::PathBuf::from(&os).exists() {
-                                form.file(k, v).unwrap()
-                            } else {
-                                form
-                            }
-
-                        },
+                        // MultipartField::Filepath(_v) => {
+                        //     panic!("Files are not supported at the moment")
+                        // }
                         MultipartField::Blob(v) => form.part(
                             k,
                             Part::bytes(v)
@@ -136,11 +130,11 @@ impl RequestBuilder {
         };
         self
     }
-    pub fn send<T>(self) -> Result<Response<T>, CKANError>
+    pub async fn send<T>(self) -> Result<Response<T>, CKANError>
     where
         T: for<'de> Deserialize<'de>,
     {
-        Ok(self.request.send()?.json::<Response<T>>()?)
+        Ok(self.request.send().await?.json::<Response<T>>().await?)
     }
 }
 
@@ -321,26 +315,12 @@ impl Params {
         self
     }
 
-    /// Add a file to the multipart payload using filepath.
-    ///
-    /// # Examples
-    /// ```
-    /// # use ckanapi::{Params, MultipartField};
-    /// # use serde_json::json;
-    /// let mut payload = Params::multipart();
-    /// payload.add_file("file", "~/Downloads/file.csv");
-    ///
-    /// assert_eq!(Params::Multipart(
-    ///     vec![("file".into(), MultipartField::Filepath("~/Downloads/file.csv".into()))]),
-    ///     payload
-    /// );
-    /// ```
-    pub fn add_file<N: Into<String>, V: Into<String>>(&mut self, name: N, value: V) -> &mut Self {
-        if let Params::Multipart(fields) = self {
-            fields.push((name.into(), MultipartField::Filepath(value.into())));
-        }
-        self
-    }
+    // pub fn add_file<N: Into<String>, V: Into<String>>(&mut self, name: N, value: V) -> &mut Self {
+    //     if let Params::Multipart(fields) = self {
+    //         fields.push((name.into(), MultipartField::Filepath(value.into())));
+    //     }
+    //     self
+    // }
 
     /// Add a file to the multipart payload using its binary content.
     ///
@@ -372,9 +352,10 @@ impl Params {
 }
 
 #[derive(Debug, PartialEq)]
+#[non_exhaustive]
 pub enum MultipartField {
     Literal(String),
-    Filepath(String),
+    // Filepath(String),
     Blob(Vec<u8>),
 }
 
@@ -383,81 +364,80 @@ pub enum MultipartField {
 mod tests {
     use super::*;
 
-    #[test]
-    fn test_creation_with_any_string() {
-        _ = CKAN::from("http://localhost:5000");
-        _ = CKAN::from("http://localhost:5000".to_string());
+    fn ckan() -> CKAN {
+        let mut ckan = CKAN::from("http://localhost:5000");
+
+        if let Some(token) = std::env::var_os("CKAN_TOKEN") {
+            ckan.login(token.into_string().unwrap());
+        }
+
+        ckan
     }
 
-    #[test]
-    fn test_status_show() {
-        let client = CKAN::from("http://localhost:5000");
-        let resp: Value = client
+    #[tokio::test]
+    async fn test_status_show() {
+        let resp: Value = ckan()
             .build("status_show")
             .send()
-            .unwrap()
+            .await.unwrap()
             .extract()
             .unwrap();
         assert_eq!(resp["site_title"], "CKAN Demo");
     }
 
-    #[test]
-    fn test_params_json() {
-        let client = CKAN::from("http://localhost:5000");
+    #[tokio::test]
+    async fn test_params_json() {
         let mut payload = Params::json();
         payload.add_field("rows", "0");
 
-        let resp: Value = client
+        let resp: Value = ckan()
             .build("package_search")
             .params(payload)
             .send()
-            .unwrap()
+            .await.unwrap()
             .extract()
             .unwrap();
         assert!(resp["count"].as_i64().unwrap() > 0);
         assert!(resp["results"].as_array().unwrap().len() == 0);
     }
 
-    #[test]
-    fn test_params_multipart() {
-        let client = CKAN::from("http://localhost:5000");
+    #[tokio::test]
+    async fn test_params_multipart() {
         let mut payload = Params::multipart();
         payload.add_field("rows", "0");
 
-        let resp: Value = client
+        let resp: Value = ckan()
             .build("package_search")
             .params(payload)
             .send()
-            .unwrap()
+            .await.unwrap()
             .extract()
             .unwrap();
         assert!(resp["count"].as_i64().unwrap() > 0);
         assert!(resp["results"].as_array().unwrap().len() == 0);
     }
 
-    #[test]
-    fn test_auth_error() {
-        let client = CKAN::from("http://localhost:5000");
-        let err = client
+    #[tokio::test]
+    async fn test_auth_error() {
+        let mut ckan = ckan();
+        ckan.logout();
+        let err = ckan
             .build("package_create")
             .send::<Value>()
-            .unwrap()
+            .await.unwrap()
             .extract()
             .err()
             .unwrap();
         match err {
             CKANError::Authorization(msg) => {
-                assert_eq!(
-                    "Access denied: User  not authorized to create packages",
-                    msg
-                );
+                // pass
             }
             _ => panic!("Unexpected error: {:?}", err),
         }
     }
 
-    #[test]
-    fn test_not_found_error() {
+    #[tokio::test]
+    async fn test_not_found_error() {
         let client = CKAN::from("http://localhost:5000");
         let err = client
             .build("package_show")
@@ -465,7 +445,7 @@ mod tests {
                 serde_json::json!({"id": "|not-a-read-dataset|"}),
             ))
             .send::<Value>()
-            .unwrap()
+            .await.unwrap()
             .extract()
             .err()
             .unwrap();
@@ -477,13 +457,13 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_validation_error() {
+    #[tokio::test]
+    async fn test_validation_error() {
         let client = CKAN::from("http://localhost:5000");
         let err = client
             .build("package_show")
             .send::<Value>()
-            .unwrap()
+            .await.unwrap()
             .extract()
             .err()
             .unwrap();
@@ -493,21 +473,6 @@ mod tests {
             }
             _ => panic!("Unexpected error: {:?}", err),
         }
-    }
-
-    #[test]
-    fn test_error() {
-        env_logger::init();
-        let mut ckan = CKAN::from("http://localhost:5000");
-        ckan.login("eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJqdGkiOiJ0VUJSdWptc1hrNGFxX0JnOVVsUW4xQlBwR1ZYeTBIRk8tb2Y2TFR3VW1qaGxvcFYzbk1yZ0VIRTJiQjZpMm83NU5DRU5HWTV4TnFmaV9VaCIsImlhdCI6MTY1NDA5NTEyNX0.Nl1IM48b-dQhnh6COyZjkgmwnfgjZDCCGP5S-OtwRSc");
-
-        let result: serde_json::Value = ckan.build("nswflood_me")
-            .params(Params::Empty)
-            .send().unwrap()
-            .extract().unwrap();
-
-
-        dbg!(result);
     }
 
     #[tokio::test]

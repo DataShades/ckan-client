@@ -1,6 +1,7 @@
 use std::ffi::OsStr;
 use std::fs::File;
 use std::io::{Read, Seek};
+use async_trait::async_trait;
 
 use crate::read_source_path;
 use crate::types::{
@@ -12,28 +13,30 @@ use serde_json::{json, Value};
 
 const CHUNK_SIZE: usize = 5 * 1024 * 1024;
 
+#[async_trait]
 pub trait FdpClient {
-    fn user_info(&self) -> crate::Result<User>;
-    fn available_projects(&self, name: &str) -> Vec<Project>;
-    fn project_set(&self, id: Option<&str>) -> crate::Result<Value>;
+    async fn submission_finalize(&self) -> crate::Result<()>;
+    async fn user_info(&self) -> crate::Result<User>;
+    async fn available_projects(&self, name: &str) -> Vec<Project>;
+    async fn project_set(&self, id: Option<&str>) -> crate::Result<Value>;
 
-    fn show_submission(&self) -> Option<Vec<Value>>;
+    async fn show_submission(&self) -> Option<Vec<Value>>;
 
-    fn validate_dataset<P: AsRef<OsStr>>(
+    async fn validate_dataset(
         &self,
-        path: P,
+        path: &OsStr,
         name: &str,
     ) -> crate::Result<ValidationResult>;
-    fn validate_resource<P: AsRef<OsStr>>(
+    async fn validate_resource(
         &self,
-        path: P,
+        path: &OsStr,
         dataset: &str,
         name: &str,
     ) -> crate::Result<ValidationResult>;
 
-    fn show_upload(&self, dataset: &str, name: &str) -> Option<ProgressedUpload>;
-    fn register_upload(&self, path: &str, dataset: &str, name: &str) -> Option<RegisteredUpload>;
-    fn progress_upload(
+    async fn show_upload(&self, dataset: &str, name: &str) -> Option<ProgressedUpload>;
+    async fn register_upload(&self, path: &str, dataset: &str, name: &str) -> Option<RegisteredUpload>;
+    async fn progress_upload(
         &self,
         path: &str,
         dataset: &str,
@@ -42,20 +45,26 @@ pub trait FdpClient {
     ) -> Option<ProgressedUpload>;
 }
 
+#[async_trait]
 impl FdpClient for CKAN {
-    fn user_info(&self) -> crate::Result<User> {
-        let resp = self.build("nswflood_me").send::<User>()?;
+    async fn submission_finalize(&self) -> crate::Result<()> {
+        let _resp = self.build("nswflood_submission_finalize").send::<Value>().await?;
+        dbg!(_resp);
+        Ok(())
+    }
+    async fn user_info(&self) -> crate::Result<User> {
+        let resp = self.build("nswflood_me").send::<User>().await?;
 
         Ok(resp.extract()?)
     }
 
-    fn available_projects(&self, name: &str) -> Vec<Project> {
+    async fn available_projects(&self, name: &str) -> Vec<Project> {
         let payload = Params::Json(json!({"name": name, "rows": 10, "fl": "id,name,title"}));
 
         match self
             .build("nswflood_available_project_list")
             .params(payload)
-            .send()
+            .send().await
             .map_or(None, |r| r.extract().ok())
         {
             Some::<AvailableProjects>(projects) => projects.results,
@@ -63,38 +72,38 @@ impl FdpClient for CKAN {
         }
     }
 
-    fn project_set(&self, id: Option<&str>) -> crate::Result<Value> {
+    async fn project_set(&self, id: Option<&str>) -> crate::Result<Value> {
         let payload = Params::Json(json!({"id": id}));
-        let resp = self.build("nswflood_submission_project_set").params(payload).send()?;
+        let resp = self.build("nswflood_submission_project_set").params(payload).send().await?;
         Ok(resp.extract()?)
     }
 
-    fn show_submission(&self) -> Option<Vec<Value>> {
+    async fn show_submission(&self) -> Option<Vec<Value>> {
         self.build("nswflood_submission_details")
             .params(Params::Empty)
-            .send()
+            .send().await
             .ok()?
             .extract()
             .ok()
     }
 
-    fn show_upload(&self, dataset: &str, name: &str) -> Option<ProgressedUpload> {
+    async fn show_upload(&self, dataset: &str, name: &str) -> Option<ProgressedUpload> {
         let payload = Params::Json(json!({"name": name, "dataset": dataset}));
 
         self.build("nswflood_upload_show")
             .params(payload)
-            .send()
+            .send().await
             .ok()?
             .extract()
             .ok()?
     }
 
-    fn validate_dataset<P: AsRef<OsStr>>(
+    async fn validate_dataset(
         &self,
-        path: P,
+        path: &OsStr,
         name: &str,
     ) -> crate::Result<ValidationResult> {
-        let source = read_source_path(&path)?;
+        let source = read_source_path(path)?;
         let root_metadata = match source.metadata {
             Metadata::Empty => json!({}),
             Metadata::Object(ref v) => v.clone(),
@@ -108,18 +117,18 @@ impl FdpClient for CKAN {
                     .params(Params::Json(
                         json!({"data": metadata.clone(), "name": &dataset.name, "root": root_metadata}),
                     ));
-                Ok(req.send()?.extract()?)
+                Ok(req.send().await?.extract()?)
             }
         }
     }
 
-    fn validate_resource<P: AsRef<OsStr>>(
+    async fn validate_resource(
         &self,
-        path: P,
+        path: &OsStr,
         dataset: &str,
         name: &str,
     ) -> crate::Result<ValidationResult> {
-        let source = read_source_path(&path)?;
+        let source = read_source_path(path)?;
         let dataset = source.get_dataset(dataset).ok_or("Dataset not found")?;
         let res = dataset.get_resoure(name).ok_or("Resource not found")?;
         match &res.metadata {
@@ -130,25 +139,25 @@ impl FdpClient for CKAN {
                     .params(Params::Json(
                         json!({"data": metadata.clone(), "dataset": &dataset.name, "name": &res.name}),
                     ));
-                Ok(req.send()?.extract()?)
+                Ok(req.send().await?.extract()?)
             }
         }
     }
 
-    fn register_upload(&self, path: &str, dataset: &str, name: &str) -> Option<RegisteredUpload> {
+    async fn register_upload(&self, path: &str, dataset: &str, name: &str) -> Option<RegisteredUpload> {
         let source = read_source_path(&path).ok()?;
         let res = source.get_dataset(dataset)?.get_resoure(name)?;
         let payload = Params::Json(json!({"name": name, "dataset": dataset, "size": res.size()}));
 
         self.build("nswflood_upload_register")
             .params(payload)
-            .send()
+            .send().await
             .ok()?
             .extract()
             .ok()
     }
 
-    fn progress_upload(
+    async fn progress_upload(
         &self,
         path: &str,
         dataset: &str,
@@ -183,7 +192,7 @@ impl FdpClient for CKAN {
         match self
             .build("nswflood_upload_progress")
             .params(payload)
-            .send()
+            .send().await
             .ok()?
             .extract()
             .ok()
@@ -193,7 +202,7 @@ impl FdpClient for CKAN {
                 if flake.data.bytes_uploaded == res.size() {
                     self.build("nswflood_upload_complete")
                         .params(Params::Json(json!({"dataset": dataset, "name": name})))
-                        .send()
+                        .send().await
                         .ok()?
                         .extract()
                         .ok()
@@ -222,22 +231,22 @@ mod tests {
         ckan
     }
 
-    #[test]
-    fn test_user_info_return_data() {
+    #[tokio::test]
+    async fn test_user_info_return_data() {
         let ckan = ckan();
-        let result = ckan.user_info();
+        let result = ckan.user_info().await;
         assert!(result.is_ok(), "Cannot get user info: {:?}", result);
     }
 
-    #[test]
-    fn test_project_set() {
+    #[tokio::test]
+    async fn test_project_set() {
         let ckan = ckan();
-        let result = ckan.project_set("<id>");
+        let result = ckan.project_set(Some("<id>")).await;
         assert!(result.is_ok(), "Cannot set project: {:?}", result);
     }
 
-    #[test]
-    fn test_validate_dataset_and_resource() {
+    #[tokio::test]
+    async fn test_validate_dataset_and_resource() {
         let dir = tempdir().unwrap();
         let mut source = Source::new(dir.path()).unwrap();
         source.metadata = Metadata::default();
@@ -246,7 +255,7 @@ mod tests {
         source.add_dataset("dataset").unwrap();
 
         let ckan = ckan();
-        assert!(ckan.validate_dataset(&source.path, "dataset").is_err());
+        assert!(ckan.validate_dataset(source.path.as_ref(), "dataset").await.is_err());
 
         let dataset = source.get_dataset_mut("dataset").unwrap();
 
@@ -259,16 +268,16 @@ mod tests {
         dataset.metadata = Metadata::Object(json!({}));
         dataset.metadata.write(&dataset.metadata_path()).unwrap();
 
-        let result: ValidationResult = ckan.validate_dataset(&source.path, "dataset").unwrap();
+        let result: ValidationResult = ckan.validate_dataset(source.path.as_ref(), "dataset").await.unwrap();
         assert_eq!(result.data, json!({}));
         assert!(result.errors.as_object().unwrap().len() > 0);
 
-        let result: ValidationResult = ckan.validate_dataset(&source.path, "dataset").unwrap();
+        let result: ValidationResult = ckan.validate_dataset(source.path.as_ref(), "dataset").await.unwrap();
         assert_eq!(result.data, json!({}));
         assert!(result.errors.as_object().unwrap().len() > 0);
 
         let result: ValidationResult = ckan
-            .validate_resource(&source.path, "dataset", "resource")
+            .validate_resource(source.path.as_ref(), "dataset", "resource").await
             .unwrap();
         assert_eq!(
             result.data,

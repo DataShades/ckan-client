@@ -1,3 +1,6 @@
+
+[DEV] not ready for use
+
 Client for the CKAN API.
 
 ```no_run

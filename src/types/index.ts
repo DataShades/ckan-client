@@ -31,4 +31,5 @@ export type TResource = {
   path: string,
   name: string,
   metadata: TMetadata | null,
+  size: number,
 }

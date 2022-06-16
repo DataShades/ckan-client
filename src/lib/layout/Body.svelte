@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Container, Nav, NavItem } from "sveltestrap";
+  import { Button, Container, Nav, NavItem } from "sveltestrap";
   import { Router, Link, Route, navigate, link } from "svelte-routing";
   import { UserForm, Home, Project, Datasets, Uploads, Source } from "../page";
   import {
@@ -7,6 +7,9 @@
     User,
     Project as SProject,
     Source as SSource,
+    Queue,
+    Flakes,
+    Submission,
   } from "../../services";
 
   let loginDisabled = false;
@@ -26,6 +29,16 @@
 
   $: projectSelected = !!project;
   $: sourceReady = !!(source && source.path && source.metadata);
+  $: everythingIsValid = $SSource.datasets.every((d) =>
+    $Flakes.ready.includes(d.name)
+  );
+  $: uploads = $Flakes.uploads;
+  $: everythinIsUploaded = $SSource.datasets.every((d) =>
+    d.resources.every((r) => {
+      const upload = uploads[`${d.name}/${r.name}`];
+      return upload && upload.data.completed;
+    })
+  );
 </script>
 
 <Container fluid class="flex-grow-1 mt-2">
@@ -70,6 +83,27 @@
           >
             Uploads
           </a>
+        </NavItem>
+        <NavItem class="ms-auto">
+          {#if everythingIsValid && everythinIsUploaded}
+            <Button
+              color="success"
+              class="nav-link"
+              on:click={() => Submission.finalize()}
+            >
+              Complete
+            </Button>
+          {:else if everythingIsValid}
+            {#if $Queue.processing}
+              <Button class="nav-link" on:click={() => Queue.clear()}>
+                Pause all uploads
+              </Button>
+            {:else}
+              <Button class="nav-link" on:click={() => Queue.fullUpload()}>
+                Full upload
+              </Button>
+            {/if}
+          {/if}
         </NavItem>
       </Nav>
 

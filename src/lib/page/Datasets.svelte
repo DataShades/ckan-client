@@ -1,16 +1,30 @@
 <script lang="ts">
-  import {
-    Alert,
-    Button,
-    FormGroup,
-    Input,
-    InputGroup,
-  } from "sveltestrap";
+  import type { TDataset } from "src/types";
 
-  import { Source, Flakes } from "../../services";
-  import {Dataset} from "../component";
+  import { Alert, Button, FormGroup, Input, InputGroup } from "sveltestrap";
+
+  import { Source, Flakes, Submission, Queue } from "../../services";
+  import { Dataset } from "../component";
+  import DatasetsProgress from "../component/DatasetsProgress.svelte";
 
   let newDatasetName = "";
+
+  let pending: string | null = null;
+
+  const validate = async (e: CustomEvent) => {
+    const dataset = e.detail.dataset;
+    pending = dataset.name;
+    await Submission.validateDataset(dataset.name);
+    for (let resource of dataset.resources) {
+      await Submission.validateResource(dataset.name, resource.name);
+    }
+    pending = null;
+  };
+  const upload = async (e: CustomEvent) => {
+    const dataset: TDataset = e.detail.dataset;
+    dataset.resources.forEach((r) => Queue.add(dataset, r));
+    Queue.process();
+  };
 </script>
 
 <div class="m-5">
@@ -18,7 +32,13 @@
     <Alert color="primary">The source contains no datasets.</Alert>
   {:else}
     {#each $Source.datasets as dataset}
-      <Dataset {dataset} validated={$Flakes.datasets[dataset.name]} />
+      <Dataset
+        {dataset}
+        validated={$Flakes.datasets[dataset.name]}
+        pending={pending === dataset.name}
+        on:validate={validate}
+        on:upload={upload}
+      />
     {/each}
   {/if}
 
@@ -29,3 +49,9 @@
     </InputGroup>
   </FormGroup>
 </div>
+
+<DatasetsProgress
+  total={$Source.datasets.length}
+  empty={$Source.datasets.filter((d) => !d.metadata).length}
+  ready={$Flakes.ready.length}
+/>
