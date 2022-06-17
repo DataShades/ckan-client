@@ -1,13 +1,5 @@
 <script lang="ts">
-  import {
-    Alert,
-    Button,
-    FormGroup,
-    Input,
-    InputGroup,
-    InputGroupText,
-    Label,
-  } from "sveltestrap";
+  import { Alert, Button, FormGroup, Input, InputGroup } from "sveltestrap";
   import { Source, Toaster } from "../../services";
 
   let path = $Source.path;
@@ -34,9 +26,10 @@
   const browse = async () => {
     let p = await Source.browse();
     if (p !== null) {
-      path = p;
-      checkPath();
-
+      setTimeout( () => {
+        path = String(p);
+        checkPath();
+      }, 500);
     }
   };
 </script>
@@ -48,14 +41,11 @@
   </InputGroup>
   <Button on:click={checkPath} class="mt-2">Synchronize</Button>
   {#if $Source.path}
-    <Button on:click={() => Source.open()} class="mt-2">
-      Open directory
-    </Button>
+    <Button on:click={() => Source.open()} class="mt-2">Open directory</Button>
   {/if}
   {#if $Source.metadata}
-    <Button
-      on:click={() => Source.open("metadata.json")}
-      class="mt-2">Open metadata</Button
+    <Button on:click={() => Source.open("metadata.json")} class="mt-2"
+      >Open metadata</Button
     >
   {/if}
 </FormGroup>
@@ -81,7 +71,7 @@
   </Alert>
 {:else if $Source.path && $Source.metadata}
   <div class="m-5">
-    <h3>Metadata</h3>
+    <h3>Master metadata</h3>
     <pre>{JSON.stringify($Source.metadata, null, 2)}</pre>
   </div>
 {/if}

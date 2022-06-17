@@ -43,6 +43,7 @@
   {/if}
 
   <FormGroup class="mt-5">
+<h3> Create dataset </h3>
     <InputGroup>
       <Input placeholder="Dataset name" bind:value={newDatasetName} />
       <Button on:click={() => Source.addDataset(newDatasetName)}>Create</Button>

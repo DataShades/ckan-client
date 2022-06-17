@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Container, Nav, NavItem } from "sveltestrap";
+  import { Button, ButtonGroup, Container, Nav, NavItem } from "sveltestrap";
   import { Router, Link, Route, navigate, link } from "svelte-routing";
   import { UserForm, Home, Project, Datasets, Uploads, Source } from "../page";
   import {
@@ -29,15 +29,9 @@
 
   $: projectSelected = !!project;
   $: sourceReady = !!(source && source.path && source.metadata);
+  $: hasAnyDatasets = $SSource.datasets.length;
   $: everythingIsValid = $SSource.datasets.every((d) =>
     $Flakes.ready.includes(d.name)
-  );
-  $: uploads = $Flakes.uploads;
-  $: everythinIsUploaded = $SSource.datasets.every((d) =>
-    d.resources.every((r) => {
-      const upload = uploads[`${d.name}/${r.name}`];
-      return upload && upload.data.completed;
-    })
   );
 </script>
 
@@ -85,24 +79,35 @@
           </a>
         </NavItem>
         <NavItem class="ms-auto">
-          {#if everythingIsValid && everythinIsUploaded}
-            <Button
-              color="success"
-              class="nav-link"
-              on:click={() => Submission.finalize()}
-            >
-              Complete
-            </Button>
-          {:else if everythingIsValid}
-            {#if $Queue.processing}
-              <Button class="nav-link" on:click={() => Queue.clear()}>
-                Pause all uploads
+          {#if hasAnyDatasets}
+            <ButtonGroup>
+              <Button
+                color="success"
+                class="nav-link"
+                on:click={() => Submission.validateEverything()}
+              >
+                Validate all datasets
               </Button>
-            {:else}
-              <Button class="nav-link" on:click={() => Queue.fullUpload()}>
-                Full upload
-              </Button>
-            {/if}
+              {#if everythingIsValid}
+                {#if $Queue.processing}
+                  <Button
+                    color="success"
+                    class="nav-link"
+                    on:click={() => Queue.clear()}
+                  >
+                    Pause all uploads
+                  </Button>
+                {:else}
+                  <Button
+                    color="success"
+                    class="nav-link"
+                    on:click={async () => Queue.fullUpload(true)}
+                  >
+                    Upload everything and complete submission
+                  </Button>
+                {/if}
+              {/if}
+            </ButtonGroup>
           {/if}
         </NavItem>
       </Nav>
