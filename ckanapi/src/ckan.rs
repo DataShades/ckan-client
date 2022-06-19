@@ -67,7 +67,10 @@ impl CKAN {
     /// client.login("my-secret-token");
     /// assert!(!client.is_anon());
     /// ```
-    pub fn login<T: Into<String>>(&mut self, token: T) {
+    pub fn login<T>(&mut self, token: T)
+    where
+        T: Into<String>,
+    {
         self.token.replace(token.into());
     }
 
@@ -86,7 +89,10 @@ impl CKAN {
         self.token.take()
     }
 
-    pub fn build<A: Into<Action>>(&self, action: A) -> RequestBuilder {
+    pub fn build<A>(&self, action: A) -> RequestBuilder
+    where
+        A: Into<Action>,
+    {
         let url = format!("{}{}", self.url, action.into().to_path());
         let mut req = self.client.post(url);
         if let Some(token) = &self.token {
@@ -379,7 +385,8 @@ mod tests {
         let resp: Value = ckan()
             .build("status_show")
             .send()
-            .await.unwrap()
+            .await
+            .unwrap()
             .extract()
             .unwrap();
         assert_eq!(resp["site_title"], "CKAN Demo");
@@ -394,7 +401,8 @@ mod tests {
             .build("package_search")
             .params(payload)
             .send()
-            .await.unwrap()
+            .await
+            .unwrap()
             .extract()
             .unwrap();
         assert!(resp["count"].as_i64().unwrap() > 0);
@@ -410,7 +418,8 @@ mod tests {
             .build("package_search")
             .params(payload)
             .send()
-            .await.unwrap()
+            .await
+            .unwrap()
             .extract()
             .unwrap();
         assert!(resp["count"].as_i64().unwrap() > 0);
@@ -424,7 +433,8 @@ mod tests {
         let err = ckan
             .build("package_create")
             .send::<Value>()
-            .await.unwrap()
+            .await
+            .unwrap()
             .extract()
             .err()
             .unwrap();
@@ -445,7 +455,8 @@ mod tests {
                 serde_json::json!({"id": "|not-a-read-dataset|"}),
             ))
             .send::<Value>()
-            .await.unwrap()
+            .await
+            .unwrap()
             .extract()
             .err()
             .unwrap();
@@ -463,7 +474,8 @@ mod tests {
         let err = client
             .build("package_show")
             .send::<Value>()
-            .await.unwrap()
+            .await
+            .unwrap()
             .extract()
             .err()
             .unwrap();
