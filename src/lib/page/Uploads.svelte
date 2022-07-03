@@ -16,6 +16,16 @@
   };
 </script>
 
+<ul>Upload queue:
+{#each [...$Queue.items] as [key, _value]}
+  <li>
+    {key}
+  </li>
+{:else}
+  Empty
+{/each}
+</ul>
+
 <div class="m-5">
   {#each $Source.datasets.filter((d) => d.metadata && d.resources.length) as dataset}
     <Card class="m2">
