@@ -41,6 +41,7 @@ const finalize = async () => {
 
 const progressUpload = async (dataset: string, name: string, part: number) => {
   try {
+    console.debug("Uploading part #%s of %s/%s", part, dataset, name)
     await Tauri.invoke("progress_upload", {
       path: get(Source).path,
       dataset,

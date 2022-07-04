@@ -1,6 +1,7 @@
 use reqwest::{
     multipart::{Form, Part},
     Client,
+    Url
 };
 
 use serde::{Deserialize, Serialize};
@@ -94,10 +95,15 @@ impl CKAN {
         A: Into<Action>,
     {
         let url = format!("{}{}", self.url, action.into().to_path());
+        let header_name = match Url::parse(&url) {
+            Ok(url) if url.username() != "" => "X-CKAN-API-Key",
+            _ => "Authorization",
+        };
+
         let mut req = self.client.post(url);
         if let Some(token) = &self.token {
             log::debug!("Set token: {}", token);
-            req = req.header(reqwest::header::AUTHORIZATION, token);
+            req = req.header(header_name, token);
         }
         RequestBuilder { request: req }
     }
@@ -389,7 +395,7 @@ mod tests {
             .unwrap()
             .extract()
             .unwrap();
-        assert_eq!(resp["site_title"], "CKAN Demo");
+        assert_ne!(resp["site_title"], Value::Null);
     }
 
     #[tokio::test]

@@ -67,21 +67,25 @@ const process = async () => {
   store.update((queue) => ({ ...queue, processing: false }));
 };
 
-const fullUpload = async (finalize: boolean) => {
+const _incomplete = () => {
   const uploads = get(Flakes).uploads;
-  get(Source).datasets.forEach((d) =>
+  return get(Source).datasets.flatMap((d) =>
     d.resources
       .filter((r) => {
         const upload = uploads[`${d.name}/${r.name}`];
         return !upload || !upload.data.completed;
       })
-      .forEach((r) => add(d, r))
-  );
-  await process();
-  if (finalize) {
-    await Submission.finalize()
-  }
 
+      .map((r) => ({ dataset: d, resource: r }))
+  );
+};
+
+const fullUpload = async (finalize: boolean) => {
+  _incomplete().forEach(({ dataset, resource }) => add(dataset, resource));
+  await process();
+  if (!_incomplete().length && finalize) {
+    await Submission.finalize();
+  }
 };
 
 const exhaustQueue = async () => {
