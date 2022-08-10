@@ -100,7 +100,7 @@
   <CardFooter>
     <Button on:click={() => Source.open(dataset.name)}>Open directory</Button>
     {#if dataset.metadata}
-      <Button on:click={() => Source.open(dataset.name + ".json")}>
+      <Button on:click={() => Source.open(dataset.name + ".toml")}>
         Open metadata
       </Button>
       <Button

@@ -44,7 +44,7 @@
     <Button on:click={() => Source.open()} class="mt-2">Open directory</Button>
   {/if}
   {#if $Source.metadata}
-    <Button on:click={() => Source.open("metadata.json")} class="mt-2"
+    <Button on:click={() => Source.open("metadata.toml")} class="mt-2"
       >Open metadata</Button
     >
   {/if}

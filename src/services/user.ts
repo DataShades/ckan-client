@@ -1,4 +1,4 @@
-import { writable } from "svelte/store"
+import { writable , get} from "svelte/store"
 import type { TUser, TPortal } from "../types";
 import Project from './project'
 import Source from './source'
@@ -38,6 +38,7 @@ const restore = async (user: TUser) => {
 
 const logout = () => {
   set(null);
+  console.log("Logged out")
 }
 
 export default {

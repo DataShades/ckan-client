@@ -18,7 +18,7 @@
   export let dataset: TDataset;
   export let validated: any | null;
   const openFile = () => Source.open(dataset.name, resource.name);
-  const openMetadata = () => Source.open(dataset.name, resource.name + ".json");
+  const openMetadata = () => Source.open(dataset.name, resource.name + ".toml");
 </script>
 
 <Card class="mb-3">

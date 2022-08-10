@@ -122,11 +122,21 @@ const open = (...fragments: string[]) => {
     Tauri.open(source.path, ...fragments)
   }
 }
+const refreshOnFocusListener = () => Tauri.window
+  .listen("tauri://focus", () => refresh())
+  .catch((err) => {
+    if (Tauri.testMode) return
+    console.warn(
+      "Cannot listen windows focus(are you working in test mode?): %o",
+      err
+    )
+  });
 
 const service = {
   subscribe,
   change,
   refresh,
+  refreshOnFocusListener,
   restore,
   saveRoot,
   saveDataset,

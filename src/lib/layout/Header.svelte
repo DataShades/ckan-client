@@ -17,6 +17,7 @@
     isOpen = event.detail.isOpen;
   }
   function logout() {
+
     User.logout();
   }
 </script>
