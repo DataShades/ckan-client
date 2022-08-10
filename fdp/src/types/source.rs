@@ -1,12 +1,75 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::collections::HashMap;
+use std::io::prelude::*;
 use std::path::PathBuf;
 use std::{
     ffi::OsStr,
-    fs::{self, DirEntry},
+    fs::{self, DirEntry, File},
 };
 
 const METADATA_EXT: &str = "toml";
+
+pub fn dataset_comments() -> HashMap<String, Vec<String>> {
+    HashMap::from([
+        (
+            "dataset_type".into(),
+            vec!["A number between 1 and 18(inclusive)".into()],
+        ),
+        ("title".into(), vec!["Human-readable title".into()]),
+        (
+            "name".into(),
+            vec!["Unique name(URL) of the dataset".into()],
+        ),
+        (
+            "notes".into(),
+            vec![
+                "Desctiption. For long descriptions use three quotation marks:".into(),
+                "notes = \"\"\"Roses are red".into(),
+                "Violets are blue\"\"\"".into(),
+            ],
+        ),
+        (
+            "publication_date".into(),
+            vec!["Date in YYYY-MM-DD format: 2022-11-24".into()],
+        ),
+        ("tag_string".into(), vec!["Comma-separated tags".into()]),
+        ("spatial_data".into(), vec!["Either 'yes' or 'no'".into()]),
+        ("license_id".into(), vec!["unspecified".into()]),
+        (
+            "dataset_status".into(),
+            vec!["One of: final, draft or updated".into()],
+        ),
+        (
+            "update_freq".into(),
+            vec!["One of: daily, weekly, monthly, quarterly, yearly, as_required".into()],
+        ),
+        ("author".into(), vec!["The name of the author".into()]),
+        ("url".into(), vec!["Source URL of the dataset".into()]),
+        ("data_comment".into(), vec!["Comment to the dataset".into()]),
+        (
+            "access_level".into(),
+            vec!["One of: open, registered, internal, restricted".into()],
+        ),
+    ])
+}
+
+pub fn resource_comments() -> HashMap<String, Vec<String>> {
+    HashMap::from([
+        (
+            "name".into(),
+            vec!["Human-readable name of the resource".into()],
+        ),
+        (
+            "description".into(),
+            vec![
+                "Desctiption. For long descriptions use three quotation marks:".into(),
+                "description = \"\"\"Roses are red".into(),
+                "Violets are blue\"\"\"".into(),
+            ],
+        ),
+    ])
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Source {
@@ -230,14 +293,32 @@ pub enum Metadata {
 }
 
 impl Metadata {
-    pub fn write<P: AsRef<OsStr>>(&self, path: &P) -> Result<(), std::io::Error> {
+    pub fn write<P: AsRef<OsStr>>(
+        &self,
+        path: &P,
+        comments: HashMap<String, Vec<String>>,
+    ) -> Result<(), std::io::Error> {
         match self {
             Metadata::Empty => fs::remove_file(path.as_ref()),
             Metadata::Object(v) => {
                 let v_str = serde_json::to_string(v).unwrap();
                 let v: toml::Value = serde_json::from_str(&v_str).unwrap();
                 let contents = toml::to_string_pretty(&v).unwrap();
-                fs::write(path.as_ref(), contents)
+
+                let mut file = File::create(path.as_ref())?;
+
+                for ln in contents.lines() {
+                    for (k, v) in comments.iter() {
+                        if ln.starts_with(k) {
+                            for comment in v {
+                                writeln!(file, "# {}", comment)?;
+                            }
+                        }
+                    }
+                    writeln!(file, "{}", ln)?;
+                    writeln!(file, "")?;
+                }
+                Ok(())
             }
         }
     }
@@ -405,11 +486,11 @@ mod tests {
         let mut source = Source::new(&dir.path).unwrap();
         let path = source.metadata_path();
 
-        let data = json!({"title": "Test"});
+        let data = json!({"title": "Test", "name": "test"});
         source.metadata = Metadata::Object(data.clone());
         assert_eq!(Metadata::Empty, Metadata::from(&path));
-
-        source.metadata.write(&path).unwrap();
+        source.metadata.write(&path, dataset_comments()).unwrap();
+        _ = dbg!(&path, fs::read_to_string(&path));
         assert_eq!(Metadata::Object(data), Metadata::from(&path));
     }
     #[test]

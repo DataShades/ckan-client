@@ -40,7 +40,10 @@ pub fn read_source_path<T: AsRef<OsStr>>(path: T) -> Result<types::Source> {
 pub fn save_root_metadata<T: AsRef<OsStr>>(path: T, metadata: Value) -> Result<()> {
     let mut source = read_source_path(&path)?;
     source.metadata = types::Metadata::Object(metadata);
-    if let Err(err) = source.metadata.write(&source.metadata_path()) {
+    if let Err(err) = source
+        .metadata
+        .write(&source.metadata_path(), types::dataset_comments())
+    {
         log::error!("{}", err);
         Err("Cannot save the metadata".into())
     } else {
@@ -78,7 +81,10 @@ pub fn save_dataset_metadata<T: AsRef<OsStr>>(path: T, name: &str, metadata: Val
         None => Err("Cannot locate the dataset".into()),
         Some(dataset) => {
             dataset.metadata = types::Metadata::Object(metadata);
-            if let Err(err) = dataset.metadata.write(&dataset.metadata_path()) {
+            if let Err(err) = dataset
+                .metadata
+                .write(&dataset.metadata_path(), types::dataset_comments())
+            {
                 log::error!("{}", err);
                 Err("Cannot save the metadata".into())
             } else {
@@ -103,7 +109,10 @@ pub fn save_resource_metadata<T: AsRef<OsStr>>(
         None => Err("Cannot locate the resource".into()),
         Some(mut resource) => {
             resource.metadata = types::Metadata::Object(metadata);
-            if let Err(err) = resource.metadata.write(&resource.metadata_path()) {
+            if let Err(err) = resource
+                .metadata
+                .write(&resource.metadata_path(), types::resource_comments())
+            {
                 log::error!("{}", err);
                 Err("Cannot save the metadata".into())
             } else {

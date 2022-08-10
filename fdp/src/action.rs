@@ -276,6 +276,8 @@ impl FdpClient for CKAN {
 
 mod tests {
 
+    use std::collections::HashMap;
+
     use tempfile::tempdir;
 
     use crate::types::Source;
@@ -321,7 +323,7 @@ mod tests {
 
         source.metadata = Metadata::default();
 
-        source.metadata.write(&source.metadata_path()).unwrap();
+        source.metadata.write(&source.metadata_path(), HashMap::new()).unwrap();
 
         source.add_dataset("dataset").unwrap();
 
@@ -340,11 +342,11 @@ mod tests {
 
         resource.metadata = Metadata::Object(json!({"url": "https://demo.ckan.org"}));
 
-        resource.metadata.write(&resource.metadata_path()).unwrap();
+        resource.metadata.write(&resource.metadata_path(), HashMap::new()).unwrap();
 
         dataset.metadata = Metadata::Object(json!({}));
 
-        dataset.metadata.write(&dataset.metadata_path()).unwrap();
+        dataset.metadata.write(&dataset.metadata_path(), HashMap::new()).unwrap();
 
         let result: ValidationResult = ckan
             .validate_dataset(source.path.as_ref(), "dataset")
@@ -383,7 +385,7 @@ mod tests {
 
         source.metadata = Metadata::default();
 
-        source.metadata.write(&source.metadata_path()).unwrap();
+        source.metadata.write(&source.metadata_path(), HashMap::new()).unwrap();
 
         source.add_dataset("dataset").unwrap();
 
@@ -393,7 +395,7 @@ mod tests {
             json!({"flood_studies": "xxxx", "extras": [{"key": "comment", "value": "This is my comment"}]}),
         );
 
-        dataset.metadata.write(&dataset.metadata_path()).unwrap();
+        dataset.metadata.write(&dataset.metadata_path(), HashMap::new()).unwrap();
 
         let ckan = ckan();
 

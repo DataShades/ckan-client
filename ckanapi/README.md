@@ -1,5 +1,4 @@
-
-[DEV] not ready for use
+DEV not ready for use
 
 Client for the CKAN API.
 
