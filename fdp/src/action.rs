@@ -72,17 +72,20 @@ impl FdpClient for CKAN {
             .map_or(None, |r| r.extract().ok())
         {
             Some::<AvailableProjects>(projects) => projects.results,
+
             None => Vec::new(),
         }
     }
 
     async fn project_set(&self, id: Option<&str>) -> crate::Result<Value> {
         let payload = Params::Json(json!({ "id": id }));
+
         let resp = self
             .build("nswflood_submission_project_set")
             .params(payload)
             .send()
             .await?;
+
         Ok(resp.extract()?)
     }
 
@@ -110,19 +113,29 @@ impl FdpClient for CKAN {
 
     async fn validate_dataset(&self, path: &OsStr, name: &str) -> crate::Result<ValidationResult> {
         let source = read_source_path(path)?;
+
         let root_metadata = match source.metadata {
             Metadata::Empty => json!({}),
+
             Metadata::Object(ref v) => v.clone(),
         };
+
         let dataset = source.get_dataset(name).ok_or("Dataset not found")?;
+
         match &dataset.metadata {
             Metadata::Empty => Err("Dataset has no metadata".into()),
+
             Metadata::Object(metadata) => {
                 let req = self
+
                     .build("nswflood_submission_validate_dataset")
+
                     .params(Params::Json(
+
                         json!({"data": metadata.clone(), "name": &dataset.name, "root": root_metadata}),
+
                     ));
+
                 Ok(req.send().await?.extract()?)
             }
         }
@@ -130,21 +143,33 @@ impl FdpClient for CKAN {
 
     async fn validate_resource(
         &self,
+
         path: &OsStr,
+
         dataset: &str,
+
         name: &str,
     ) -> crate::Result<ValidationResult> {
         let source = read_source_path(path)?;
+
         let dataset = source.get_dataset(dataset).ok_or("Dataset not found")?;
+
         let res = dataset.get_resoure(name).ok_or("Resource not found")?;
+
         match &res.metadata {
             Metadata::Empty => Err("Resource has no metadata".into()),
+
             Metadata::Object(metadata) => {
                 let req = self
+
                     .build("nswflood_submission_validate_resource")
+
                     .params(Params::Json(
+
                         json!({"data": metadata.clone(), "dataset": &dataset.name, "name": &res.name}),
+
                     ));
+
                 Ok(req.send().await?.extract()?)
             }
         }
@@ -152,12 +177,17 @@ impl FdpClient for CKAN {
 
     async fn register_upload(
         &self,
+
         path: &str,
+
         dataset: &str,
+
         name: &str,
     ) -> Option<RegisteredUpload> {
         let source = read_source_path(&path).ok()?;
+
         let res = source.get_dataset(dataset)?.get_resoure(name)?;
+
         let payload = Params::Json(json!({"name": name, "dataset": dataset, "size": res.size()}));
 
         self.build("nswflood_upload_register")
@@ -171,29 +201,42 @@ impl FdpClient for CKAN {
 
     async fn progress_upload(
         &self,
+
         path: &str,
+
         dataset: &str,
+
         name: &str,
+
         part: u64,
     ) -> Option<ProgressedUpload> {
         let source = read_source_path(&path).ok()?;
+
         let res = source.get_dataset(dataset)?.get_resoure(name)?;
+
         let mut path = res.path.clone();
+
         path.push(&res.name);
 
         let mut file = File::open(path).ok()?;
+
         let offset = (part - 1) * CHUNK_SIZE as u64;
+
         file.seek(std::io::SeekFrom::Start(offset)).ok()?;
+
         let mut buf = vec![];
 
         let reader = std::io::BufReader::new(file);
+
         reader
             .take(CHUNK_SIZE as u64)
             .read_to_end(&mut buf)
             .expect("Cannot read a chunk from file");
+
         let size = buf.len();
 
         let mut payload = Params::multipart();
+
         payload
             .add_field("dataset".to_string(), dataset.to_string())
             .add_field("name".to_string(), name.to_string())
@@ -211,6 +254,7 @@ impl FdpClient for CKAN {
             .ok()
         {
             None => None,
+
             Some::<ProgressedUpload>(flake) => {
                 if flake.data.bytes_uploaded == res.size() {
                     self.build("nswflood_upload_complete")
@@ -229,12 +273,15 @@ impl FdpClient for CKAN {
 }
 
 #[cfg(test)]
+
 mod tests {
+
     use tempfile::tempdir;
 
     use crate::types::Source;
 
     use super::*;
+
     fn ckan() -> CKAN {
         let mut ckan = CKAN::from("http://localhost:5000");
 
@@ -246,29 +293,40 @@ mod tests {
     }
 
     #[tokio::test]
+
     async fn test_user_info_return_data() {
         let ckan = ckan();
+
         let result = ckan.user_info().await;
+
         assert!(result.is_ok(), "Cannot get user info: {:?}", result);
     }
 
     #[tokio::test]
+
     async fn test_project_set() {
         let ckan = ckan();
+
         let result = ckan.project_set(Some("<id>")).await;
+
         assert!(result.is_ok(), "Cannot set project: {:?}", result);
     }
 
     #[tokio::test]
+
     async fn test_validate_dataset_and_resource() {
         let dir = tempdir().unwrap();
+
         let mut source = Source::new(dir.path()).unwrap();
+
         source.metadata = Metadata::default();
+
         source.metadata.write(&source.metadata_path()).unwrap();
 
         source.add_dataset("dataset").unwrap();
 
         let ckan = ckan();
+
         assert!(ckan
             .validate_dataset(source.path.as_ref(), "dataset")
             .await
@@ -279,24 +337,31 @@ mod tests {
         dataset.add_resource("resource").unwrap();
 
         let resource = dataset.get_resoure_mut("resource").unwrap();
+
         resource.metadata = Metadata::Object(json!({"url": "https://demo.ckan.org"}));
+
         resource.metadata.write(&resource.metadata_path()).unwrap();
 
         dataset.metadata = Metadata::Object(json!({}));
+
         dataset.metadata.write(&dataset.metadata_path()).unwrap();
 
         let result: ValidationResult = ckan
             .validate_dataset(source.path.as_ref(), "dataset")
             .await
             .unwrap();
+
         assert_eq!(result.data, json!({}));
+
         assert!(!result.errors.as_object().unwrap().is_empty());
 
         let result: ValidationResult = ckan
             .validate_dataset(source.path.as_ref(), "dataset")
             .await
             .unwrap();
+
         assert_eq!(result.data, json!({}));
+
         assert!(!result.errors.as_object().unwrap().is_empty());
 
         let result: ValidationResult = ckan
@@ -305,27 +370,38 @@ mod tests {
             .unwrap();
 
         assert_eq!(result.data, json!({"url": "resource", "format": ""}));
+
         assert_eq!(result.errors, json!({}));
     }
 
     #[tokio::test]
+
     async fn test_validate_complex_structure() {
         let dir = tempdir().unwrap();
+
         let mut source = Source::new(dir.path()).unwrap();
+
         source.metadata = Metadata::default();
+
         source.metadata.write(&source.metadata_path()).unwrap();
 
         source.add_dataset("dataset").unwrap();
 
         let mut dataset = source.get_dataset_mut("dataset").unwrap();
-        dataset.metadata = Metadata::Object(json!({"flood_studies": "xxxxx", "extras": [{"key": "comment", "value": "This is my comment"}]}));
+
+        dataset.metadata = Metadata::Object(
+            json!({"flood_studies": "xxxx", "extras": [{"key": "comment", "value": "This is my comment"}]}),
+        );
+
         dataset.metadata.write(&dataset.metadata_path()).unwrap();
 
         let ckan = ckan();
+
         let result = ckan
             .validate_dataset(source.path.as_ref(), "dataset")
-            .await.unwrap();
-        assert_eq!(json!({}), result.errors);
+            .await
+            .unwrap();
 
+        assert_eq!(json!({}), result.errors);
     }
 }

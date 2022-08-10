@@ -1,8 +1,12 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::ffi::OsStr;
-use std::fs::{self, DirEntry};
 use std::path::PathBuf;
+use std::{
+    ffi::OsStr,
+    fs::{self, DirEntry},
+};
+
+const METADATA_EXT: &str = "toml";
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Source {
@@ -30,7 +34,7 @@ impl Source {
 
     pub fn metadata_path(&self) -> PathBuf {
         let mut path = self.path.clone();
-        path.push("metadata.json");
+        path.push("metadata.toml");
         path
     }
 
@@ -76,7 +80,8 @@ fn entry_tuples(e: DirEntry, resource: bool) -> Option<(String, String)> {
     let stem = path.file_stem()?;
     let source = path.parent()?;
     let base = source.join(stem);
-    let is_json = e.path().extension().map(|e| e.to_ascii_lowercase()) == Some("json".into());
+    let is_metadata =
+        e.path().extension().map(|e| e.to_ascii_lowercase()) == Some(METADATA_EXT.into());
 
     if e.file_type().ok()?.is_dir() {
         if resource {
@@ -87,7 +92,7 @@ fn entry_tuples(e: DirEntry, resource: bool) -> Option<(String, String)> {
                 e.file_name().to_string_lossy().into(),
             ))
         }
-    } else if is_json && base.exists() {
+    } else if is_metadata && base.exists() {
         None
     } else if resource {
         Some((
@@ -128,7 +133,7 @@ impl Dataset {
 
     pub fn metadata_path(&self) -> PathBuf {
         let mut path = self.path.clone();
-        path.push(format!("{}.json", &self.name));
+        path.push(format!("{}.toml", &self.name));
         path
     }
 
@@ -172,7 +177,6 @@ impl Dataset {
     pub fn get_resoure_mut(&mut self, name: &str) -> Option<&mut Resource> {
         self.resources.iter_mut().find(|d| d.name == name)
     }
-
 }
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -191,7 +195,7 @@ impl Resource {
                 name: name.to_owned(),
                 path,
                 metadata: Metadata::Empty,
-                size: 0
+                size: 0,
             };
             resource.refresh_metadata();
             resource.size = resource.size();
@@ -203,7 +207,7 @@ impl Resource {
 
     pub fn metadata_path(&self) -> PathBuf {
         let mut path = self.path.clone();
-        path.push(format!("{}.json", &self.name));
+        path.push(format!("{}.toml", &self.name));
         path
     }
 
@@ -230,7 +234,9 @@ impl Metadata {
         match self {
             Metadata::Empty => fs::remove_file(path.as_ref()),
             Metadata::Object(v) => {
-                let contents = serde_json::to_string_pretty(v).unwrap();
+                let v_str = serde_json::to_string(v).unwrap();
+                let v: toml::Value = serde_json::from_str(&v_str).unwrap();
+                let contents = toml::to_string_pretty(&v).unwrap();
                 fs::write(path.as_ref(), contents)
             }
         }
@@ -265,7 +271,7 @@ impl From<&PathBuf> for Metadata {
     fn from(path: &PathBuf) -> Self {
         if path.is_file() {
             let content = fs::read_to_string(path.as_path()).unwrap();
-            match serde_json::from_str(&content) {
+            match toml::from_str(&content) {
                 Ok(data) => Self::Object(data),
                 _ => Self::Empty,
             }
@@ -351,7 +357,7 @@ mod tests {
         fs::write(resource_path, "hello").unwrap();
 
         let mut metadata_path = dataset_path.clone();
-        metadata_path.push("test.txt.json");
+        metadata_path.push("test.txt.toml");
         fs::write(metadata_path, "hello").unwrap();
 
         let dataset = Dataset::new(&dir.path, "test").unwrap();
@@ -366,8 +372,8 @@ mod tests {
         fs::create_dir(&dataset_path).unwrap();
 
         let mut metadata_path = PathBuf::from(&dir.path);
-        metadata_path.push("test.json");
-        fs::write(metadata_path, "{}").unwrap();
+        metadata_path.push("test.toml");
+        fs::write(metadata_path, "").unwrap();
 
         let source = Source::new(&dir.path).unwrap();
         assert_eq!(1, source.datasets.len());
@@ -411,9 +417,9 @@ mod tests {
         let dir = Dir::new("/tmp/fdp/rust/test/test_source_with_existing_metadata".into());
         let data = json!({"title": "Test"});
         let mut path = PathBuf::from(&dir.path);
-        path.push("metadata.json");
+        path.push("metadata.toml");
 
-        fs::write(&path, serde_json::to_string_pretty(&data).unwrap()).unwrap();
+        fs::write(&path, toml::to_string_pretty(&data).unwrap()).unwrap();
         let mut source = Source::new(&dir.path).unwrap();
         assert_eq!(source.metadata, Metadata::Object(data));
 
@@ -421,9 +427,9 @@ mod tests {
         source.refresh_metadata();
         assert_eq!(source.metadata, Metadata::Empty);
 
-        fs::write(&path, r#""test""#).unwrap();
+        fs::write(&path, r#"test = 1"#).unwrap();
         source.refresh_metadata();
-        assert_eq!(source.metadata, Metadata::Object(json!("test")));
+        assert_eq!(source.metadata, Metadata::Object(json!({"test": 1})));
     }
 
     #[test]

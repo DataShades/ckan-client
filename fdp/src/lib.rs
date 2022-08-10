@@ -8,7 +8,6 @@ use ckanapi::CKANError;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-
 pub type Result<T> = core::result::Result<T, FdpError>;
 
 #[derive(Debug, Deserialize, Serialize)]

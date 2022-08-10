@@ -1,5 +1,3 @@
-
-
 use fdp::action::FdpClient;
 use fdp::state::PortalState;
 use fdp::types::{
@@ -17,7 +15,6 @@ pub async fn login(state: tauri::State<'_, PortalState>, portal: Portal) -> fdp:
 pub async fn submission_finalize(state: tauri::State<'_, PortalState>) -> fdp::Result<()> {
     state.client()?.submission_finalize().await
 }
-
 
 #[tauri::command]
 pub async fn list_projects(
