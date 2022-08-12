@@ -8,12 +8,10 @@
 <div class="toaster m-2">
   {#each $Toaster as toast (toast.id)}
     <div transition:fly={{ y: 200, duration: 200 }} animate:flip={{duration: 200}}>
-      <Toast  class="m-1" autohide on:close={() => Toaster.pop(toast.id)}>
-        {#if toast.header}
-          <ToastHeader icon={toast.color}>
-            {toast.header}
+      <Toast  class="m-1 toast-{toast.color}"  >
+          <ToastHeader toggle={() => Toaster.pop(toast.id)}>
+            {toast.header || "Attention"}
           </ToastHeader>
-        {/if}
         <ToastBody>
           {toast.body}
         </ToastBody>

@@ -1,5 +1,4 @@
 <script lang="ts">
-
   import {
     Collapse,
     Navbar,
@@ -8,6 +7,8 @@
     Nav,
     NavItem,
     NavLink,
+    Container,
+    Button,
   } from "sveltestrap";
   import { User } from "../../services";
 
@@ -17,27 +18,21 @@
     isOpen = event.detail.isOpen;
   }
   function logout() {
-
     User.logout();
   }
 </script>
 
-<Navbar color="dark" dark expand="md">
-  <NavbarBrand href="#">
+<Navbar color="primary" dark>
+  <Container class="container">
+    <NavbarBrand href="#">
       {#if $User}
-        Hello, {$User.display_name}!
+        Hello, {$User.display_name}
       {:else}
-        Hello
+        Login
       {/if}
-  </NavbarBrand>
-  <NavbarToggler on:click={() => (isOpen = !isOpen)} />
-    <Collapse {isOpen} navbar expand="md" on:update={handleUpdate}>
-      <Nav class="ms-auto" navbar>
-        {#if $User}
-          <NavItem>
-            <NavLink on:click={logout}>Change user</NavLink>
-          </NavItem>
-        {/if}
-      </Nav>
-    </Collapse>
+    </NavbarBrand>
+    {#if $User}
+      <Button color="light" class="float-end" outline={true} on:click={logout}>Log out</Button>
+    {/if}
+  </Container>
 </Navbar>

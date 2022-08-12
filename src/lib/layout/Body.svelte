@@ -2,6 +2,7 @@
   import { Button, ButtonGroup, Container, Nav, NavItem } from "sveltestrap";
   import { Router, Link, Route, navigate, link } from "svelte-routing";
   import { UserForm, Home, Project, Datasets, Uploads, Source } from "../page";
+  import {Manual} from "../component"
   import {
     Portal,
     User,
@@ -38,6 +39,9 @@
 <Container fluid class="flex-grow-1 mt-2">
   <Router>
     {#if $User}
+
+      <Manual open={true}/>
+
       <Nav tabs>
         <NavItem>
           <Link class="nav-link" to="/">Hint</Link>
@@ -118,12 +122,14 @@
       <Route path="datasets"><Datasets /></Route>
       <Route path="uploads"><Uploads /></Route>
     {:else}
-      <UserForm
-        url={$Portal.url}
-        token={$Portal.token}
-        on:login={login}
-        disabled={loginDisabled}
-      />
+      <Container>
+        <UserForm
+          url={$Portal.url}
+          token={$Portal.token}
+          on:login={login}
+          pending={loginDisabled}
+        />
+      </Container>
     {/if}
   </Router>
 </Container>

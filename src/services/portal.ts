@@ -16,8 +16,13 @@ const persist = async (portal: PortalDetails) => {
   set(await Storage.setItem(KEY, portal));
 }
 
-Storage.getItem(KEY).then(portal => {
-  set(portal as PortalDetails | null || defaultFactory());
+Storage.getItem(KEY).then((portal: PortalDetails | null) => {
+  console.debug("[BUT] Restore portal details from session: %o", portal);
+
+  set(portal || defaultFactory());
+  if (portal && portal.url && portal.token) {
+    User.resolve(portal);
+  }
 })
 
 export default {

@@ -1,0 +1,86 @@
+
+$font-family-sans-serif: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$primary: #004485;
+$accent2: #F48603;
+
+$header-height: 62px;
+@import "./fonts.scss";
+@import "bootstrap/scss/bootstrap.scss";
+
+.color-orange {
+  color: $accent2;
+}
+.pointable {
+ cursor: pointer;
+}
+.navbar {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  &-brand {
+    font-size: 1.125rem;
+    line-height: 2.4rem;
+    font-weight: 500;
+  }
+}
+.modal-title {
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 32px;
+}
+
+.toaster {
+  z-index: 1200;
+  position: fixed;
+  right: 0px;
+  bottom: 0px;
+}
+.toast-header {
+  color: $black;
+  strong { font-weight: 200; }
+}
+.toast-danger {
+  border-color: #EDC4C8;
+  .toast-header {
+    background: #F3D8DB;
+  }
+}
+
+.toast-info {
+  border-color: lighten($primary, 20);
+  .toast-header {
+    background: lighten($primary, 60);
+  }
+}
+
+.toast-success {
+  border-color: #C0DACD;
+  .toast-header {
+    background: #D6E6DF;
+  }
+}
+
+.manual-wrapper {
+  position: relative;
+  z-index: 10;
+  // transform: translate(-$grid-gutter-width/2, -$grid-gutter-width/2);
+  .manual-toggle {
+    position: absolute;
+    top: 104px;
+    left: -$grid-gutter-width;
+    padding: 16px;
+    padding-left: $grid-gutter-width/2 + 1.5rem;
+    border: 1px solid #CFD4D9;
+    background: #F7F7F7;
+    color: #858F97;
+    font-size: 24px;
+    line-height: 24px;
+    transition: padding-left .2s ease-in-out;
+    &:hover {
+
+      padding-left: $grid-gutter-width + 1.5rem;
+    }
+  }
+  .offcanvas, .offcanvas-backdrop {
+    top: $header-height;
+  }
+}

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import "bootstrap-icons/font/bootstrap-icons.css";
-  import "./styles/styles.css";
+  import "./styles/styles.scss";
   import { Source, Tauri } from "./services";
   import { Header, Body, Footer } from "./lib/layout";
 
@@ -9,7 +9,7 @@
 </script>
 
 <svelte:head>
-  <link rel="stylesheet" href="/bootstrap.min.css">
+  <!-- <link rel="stylesheet" href="/bootstrap.min.css"> -->
 </svelte:head>
 
 <main class="d-flex flex-column min-vh-100">
