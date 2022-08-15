@@ -7,6 +7,7 @@ import Project from "./project";
 import Source from "./source";
 import Submission from "./submission";
 import Queue from "./queue";
+import Manual from "./manual";
 import Flakes from "./flakes";
 
 export {
@@ -20,4 +21,5 @@ export {
   Submission,
   Queue,
   Flakes,
+  Manual,
 }

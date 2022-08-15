@@ -56,12 +56,12 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 700,
+        "height": 800,
         "resizable": true,
         "title": "Submission manager",
       "width": 800,
-      "minWidth": 700,
-      "minHeight": 700
+      "minWidth": 800,
+      "minHeight": 800
       }
     ]
   }

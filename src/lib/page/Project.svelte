@@ -5,6 +5,8 @@
     Alert,
     Button,
     ButtonGroup,
+    Container,
+    FormCheck,
     FormGroup,
     Icon,
     Input,
@@ -15,6 +17,7 @@
   } from "sveltestrap";
   import { Project } from "../../services";
   import type { TProject, TUser } from "../../types";
+  import { Navigation } from "../layout";
 
   export let user: TUser;
   export let chosen: TProject;
@@ -37,40 +40,36 @@
   }
 </script>
 
-<FormGroup floating class="m-5">
-  <Input
-    placeholder="Project name or title"
-    on:input={queue}
-    bind:value={name}
-  />
-  <Label slot="label">
-    Project name or title
-    {#if pending}<Spinner size="sm" />{/if}
-  </Label>
-</FormGroup>
+<Navigation step={1}>
+  <Container>
+    <h2 class="page-title">Select a project</h2>
+    <FormGroup class="d-flex">
+      <Input placeholder="Enter flood project name" bind:value={name} />
+      <Button
+        on:click={search}
+        disabled={pending}
+        color="primary"
+        class="ms-2"
+        outline>Search</Button
+      >
+    </FormGroup>
 
-{#if projects.length}
-  <ListGroup>
-    {#each projects as proj (proj.id)}
-      <ListGroupItem active={chosen && proj.id === chosen.id}>
-        {proj.title}({proj.name})
-        <ButtonGroup size="sm" class="float-end">
-          {#if chosen && proj.id === chosen.id}
-            <Button on:click={() => Project.reset(user)}>
-              <Icon name="eraser" />
-            </Button>
-          {:else}
-            <Button on:click={() => Project.choose(proj, user)}>
-              <Icon name="bag-check" />
-            </Button>
-          {/if}
-        </ButtonGroup>
-      </ListGroupItem>
-    {/each}
-  </ListGroup>
-{:else if !pending}
-  <Alert color="secondary">
-    <h4 class="alert-heading text-capitalize">Nothing found</h4>
-    Try searching by the project's title or name(URL).
-  </Alert>
-{/if}
+    {#if projects.length}
+      <ul class="projects-list p-0">
+        {#each projects as proj (proj.id)}
+          <li class="project-item pointable" on:click={() => Project.choose(proj, user)}>
+            {proj.title}
+            <ButtonGroup size="sm" class="float-end">
+              <FormCheck checked={chosen && chosen.id == proj.id}/>
+            </ButtonGroup>
+          </li>
+        {/each}
+      </ul>
+    {:else if !pending}
+      <Alert color="secondary">
+        <h4 class="alert-heading text-capitalize">Nothing found</h4>
+        Try searching by the project's title or name(URL).
+      </Alert>
+    {/if}
+  </Container>
+</Navigation>

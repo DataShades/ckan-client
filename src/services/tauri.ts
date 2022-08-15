@@ -4,7 +4,7 @@ import * as shell from '@tauri-apps/api/shell';
 import * as path from '@tauri-apps/api/path';
 import { appWindow } from '@tauri-apps/api/window'
 import type { WebviewWindow } from '@tauri-apps/api/window';
-import type { TUser } from "../types"
+import type { TProject, TUser } from "../types"
 const open = async (...paths: string[]) => {
   const p = await path.join(...paths)
   shell.open(p);
@@ -42,7 +42,20 @@ function fakeInvoke<T>(cmd: string, args?: InvokeArgs): Promise<any> {
     }
     case "list_projects": {
       const { name } = args
-      return Promise.resolve([])
+
+      let projects: TProject[] = [
+        { id: "1", name: 'proj-1', title: "Project" },
+        { id: "2", name: 'proj-2', title: "Hello" },
+        { id: "3", name: 'proj-3', title: "World" },
+        { id: "4", name: 'proj-4', title: "and" },
+        { id: "5", name: 'proj-5', title: "Hello World" },
+        { id: "6", name: 'proj-6', title: "another proj" },
+        { id: "7", name: 'proj-7', title: "no-no" },
+        { id: "8", name: 'proj-8', title: "and final" },
+      ]
+
+
+      return Promise.resolve(projects.filter(p => p.name.includes(name) || p.title.toLowerCase().includes(name)))
     }
     default:
       console.log("Default handler for cmd %s with args %o", cmd, args);

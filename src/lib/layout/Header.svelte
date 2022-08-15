@@ -1,23 +1,8 @@
 <script lang="ts">
-  import {
-    Collapse,
-    Navbar,
-    NavbarToggler,
-    NavbarBrand,
-    Nav,
-    NavItem,
-    NavLink,
-    Container,
-    Button,
-  } from "sveltestrap";
+  import { Navbar, NavbarBrand, Container, Button } from "sveltestrap";
   import { User } from "../../services";
 
-  let isOpen = false;
-
-  function handleUpdate(event: CustomEvent) {
-    isOpen = event.detail.isOpen;
-  }
-  function logout() {
+  async function logout() {
     User.logout();
   }
 </script>
@@ -32,7 +17,9 @@
       {/if}
     </NavbarBrand>
     {#if $User}
-      <Button color="light" class="float-end" outline={true} on:click={logout}>Log out</Button>
+      <Button color="light" class="float-end" outline={true} on:click={logout}>
+        Log out
+      </Button>
     {/if}
   </Container>
 </Navbar>

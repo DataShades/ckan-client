@@ -4,7 +4,7 @@
   import { Alert, Button, FormGroup, Input, InputGroup } from "sveltestrap";
 
   import { Source, Flakes, Submission, Queue } from "../../services";
-  import { Dataset } from "../component";
+  import { Dataset,  } from "../component";
   import DatasetsProgress from "../component/DatasetsProgress.svelte";
 
   let newDatasetName = "";

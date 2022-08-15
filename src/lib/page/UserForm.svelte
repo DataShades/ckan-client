@@ -78,7 +78,7 @@
   <Image src={logo1} class="w-auto h-100" />
   <Image src={logo2} class="w-auto h-100" />
 </Container>
-<Modal isOpen={isModalOpen} toggle={toggleModal} size="xl">
+<Modal isOpen={isModalOpen} toggle={toggleModal} size="lg">
   <ModalHeader toggle={toggleModal}>
     How to get an FDP authentification token
   </ModalHeader>

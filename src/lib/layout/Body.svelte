@@ -1,8 +1,9 @@
 <script lang="ts">
   import { Button, ButtonGroup, Container, Nav, NavItem } from "sveltestrap";
   import { Router, Link, Route, navigate, link } from "svelte-routing";
-  import { UserForm, Home, Project, Datasets, Uploads, Source } from "../page";
-  import {Manual} from "../component"
+  import { UserForm, Project, Datasets, Uploads, Source } from "../page";
+
+  import { Manual } from "../../services";
   import {
     Portal,
     User,
@@ -24,7 +25,9 @@
 
     loginDisabled = false;
     if (user) {
-      navigate("/");
+      navigate("/project");
+      console.log("Logged in", user);
+      Manual.toggle()
     }
   };
 
@@ -36,41 +39,11 @@
   );
 </script>
 
-<Container fluid class="flex-grow-1 mt-2">
+<Container fluid class="flex-grow-1 mt-2 p-0">
   <Router>
     {#if $User}
 
-      <Manual open={true}/>
-
       <Nav tabs>
-        <NavItem>
-          <Link class="nav-link" to="/">Hint</Link>
-        </NavItem>
-        <NavItem>
-          <Link class="nav-link" to="/project">Project</Link>
-        </NavItem>
-        <NavItem>
-          <a
-            use:link
-            class:nav-link={true}
-            class:disabled={!projectSelected}
-            href="/source"
-            title="Requires a Project"
-          >
-            Source
-          </a>
-        </NavItem>
-        <NavItem>
-          <a
-            use:link
-            class:nav-link={true}
-            class:disabled={!projectSelected || !sourceReady}
-            href="/datasets"
-            title="Requires a Source"
-          >
-            Datasets
-          </a>
-        </NavItem>
         <NavItem>
           <a
             use:link
@@ -116,7 +89,6 @@
         </NavItem>
       </Nav>
 
-      <Route path="/"><Home {project} {source} /></Route>
       <Route path="project"><Project chosen={project} user={$User} /></Route>
       <Route path="source"><Source /></Route>
       <Route path="datasets"><Datasets /></Route>
