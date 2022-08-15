@@ -27,8 +27,8 @@
     const toggle = () => Manual.toggle(section);
 </script>
 
-<div class="manual-wrapper">
-    <Button color="light" class="manual-toggle" on:click={toggle}>
+<div class="offcanvas-wrapper">
+    <Button color="light" class="offcanvas-toggle" on:click={toggle}>
         <Icon name="question-square-fill" />
     </Button>
     <Offcanvas

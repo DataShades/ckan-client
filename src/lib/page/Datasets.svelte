@@ -14,7 +14,7 @@
   } from "sveltestrap";
 
   import { Source, Flakes, Submission, Queue } from "../../services";
-  import { Dataset, NiceMetadata } from "../component";
+  import { Dataset, NiceMetadata, Uploads } from "../component";
 
   let pending: string | null = null;
 
@@ -43,7 +43,7 @@
     $Flakes.ready.includes(d.name)
   );
 </script>
-
+<Uploads/>
 <Container class="validate-page">
   <h2 class="page-title">Validate datasets and upload</h2>
   <p>After successful validation, upload your datasets to the portal</p>

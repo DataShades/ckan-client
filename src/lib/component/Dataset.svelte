@@ -113,10 +113,7 @@
         </CardSubtitle>
         <CardText>
           {#each dataset.resources as resource}
-            <Resource
-              {resource}
-              {dataset}
-            />
+            <Resource {resource} {dataset} />
           {/each}
         </CardText>
       </AccordionItem>
@@ -130,12 +127,14 @@
               <Alert color="danger">Create metadata to validate it.</Alert>
             {:else if !validated}
               <Alert color="warning">Nothing validated yet.</Alert>
-            {:else if validated.extras.errors.length}
-              {#each validated.extras.errors as error}
-              <Alert color="danger">
-
-              <pre>{JSON.stringify(error, null, 2)}</pre>
-              </Alert>
+            {:else if Object.keys(validated.extras.errors).length}
+              {#each Object.entries(validated.extras.errors) as [field, errors]}
+                <Alert color="danger">
+                  <strong>
+                    {field}
+                  </strong>:
+                  {errors.join(";")}
+                </Alert>
               {/each}
             {:else}
               <Alert color="success">All files are valid.</Alert>

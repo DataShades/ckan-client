@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Container } from "sveltestrap";
   import { Router, Route, navigate } from "svelte-routing";
-  import { UserForm, Project, Datasets, Uploads, Source } from "../page";
+  import { UserForm, Project, Datasets, Source } from "../page";
 
   import { Manual, Step } from "../../services";
   import { Portal, User, Project as SProject } from "../../services";
@@ -30,7 +30,6 @@
         <Route path="project"><Project chosen={project} user={$User} /></Route>
         <Route path="source"><Source /></Route>
         <Route path="datasets"><Datasets /></Route>
-        <Route path="uploads"><Uploads /></Route>
       </Navigation>
     {:else}
       <Container>
