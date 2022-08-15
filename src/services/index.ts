@@ -9,6 +9,7 @@ import Submission from "./submission";
 import Queue from "./queue";
 import Manual from "./manual";
 import Flakes from "./flakes";
+import Step from "./step";
 
 export {
   Tauri,
@@ -22,4 +23,5 @@ export {
   Queue,
   Flakes,
   Manual,
+  Step,
 }

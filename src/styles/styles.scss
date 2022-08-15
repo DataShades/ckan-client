@@ -1,6 +1,7 @@
 $font-family-sans-serif: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 $primary: #004485;
 $accent2: #F48603;
+$light-grey: #F7F7F7;
 
 $header-height: 62px;
 @import "./fonts.scss";
@@ -83,7 +84,7 @@ $header-height: 62px;
     padding: 1rem;
     padding-left: calc($grid-gutter-width/2) + 1.5rem;
     border: 1px solid #CFD4D9;
-    background: #F7F7F7;
+    background: $light-grey;
     color: #858F97;
     font-size: 1.5rem;
     line-height: 1.5rem;
@@ -131,13 +132,13 @@ $header-height: 62px;
   line-height: 1.5rem;
 
   &:not(.collapsed) {
-    background-color: #F7F7F7;
+    background-color: $light-grey;
   }
 }
 
 .step-circle {
   display: inline-block;
-  background: #F7F7F7;
+  background: $light-grey;
   border-radius: 50%;
   border: 1px solid #CFD4D9;
   height: 2rem;
@@ -150,7 +151,7 @@ $header-height: 62px;
 .progress-stepper {
   padding: 24px 0;
   border-bottom: 1px solid #CFD4D9;
-  background: #F7F7F7;
+  background: $light-grey;
   color: #858F97;
 
   li {
@@ -160,7 +161,7 @@ $header-height: 62px;
 
     .step-circle {
       background: #858F97;
-      color: #F7F7F7;
+      color: $light-grey;
       font-size: 16px;
     }
 
@@ -186,7 +187,7 @@ $header-height: 62px;
 .progress-footer {
   padding: 16px 0;
   border-top: 1px solid #CFD4D9;
-  background: #F7F7F7;
+  background: $light-grey;
 }
 
 .projects-list {
@@ -200,8 +201,112 @@ $header-height: 62px;
     border-radius: 5px;
     border: 1px solid #CFD4D9;
     margin-top: 5px;
+
     .form-check {
       pointer-events: none;
     }
   }
+}
+
+.btn-select-source {
+  color: #858F97;
+  background: #EAEBEF;
+  border: 1px solid #CFD4D9;
+
+}
+
+.card-header,
+.card-footer {
+  background: white;
+  padding: 16px;
+
+  .card-title {
+    margin: 0;
+  }
+}
+
+.card-text {
+  overflow-x: auto;
+}
+
+.main-page-content {
+  padding-bottom: 120px;
+}
+
+.validate-page {
+  .accordion-body {
+    padding: 0;
+
+    .card {
+      border: none;
+    }
+  }
+
+  .dataset-resources .accordion-body {
+    padding: 15px 24px;
+
+    .card {
+      background: $light-grey;
+      border: 1px solid #CFD4D9;
+
+      .accordion-body {
+        padding: 0;
+      }
+
+      .card-header {
+        background: transparent;
+        border-bottom: none;
+      }
+
+      .card-text {
+        padding: 15px 24px;
+      }
+    }
+  }
+
+  .master-metadata-accordion {
+    .accordion-button {
+      background: $light-grey;
+
+      &:not(.collapsed) {
+        background: white;
+      }
+    }
+  }
+
+  .accordion-button:not(.collapsed) {
+    color: #1A1A1A;
+  }
+}
+
+.dataset-card {
+  background: $light-grey;
+
+  >.card-header,
+  >.card-footer {
+    background: transparent;
+    border: none;
+  }
+
+  .card-subtitle {
+    font-weight: 600;
+    font-size: 1.125rem;
+  }
+
+  .card-header {
+    font-size: 1.125rem;
+    font-weight: 600;
+    padding-bottom: 0;
+
+    .btn-link {
+      background: none;
+      border: none;
+      text-decoration: none;
+      line-height: 0.75rem;
+    }
+  }
+}
+
+.badge {
+  font-weight: 500;
 }

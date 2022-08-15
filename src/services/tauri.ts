@@ -4,7 +4,7 @@ import * as shell from '@tauri-apps/api/shell';
 import * as path from '@tauri-apps/api/path';
 import { appWindow } from '@tauri-apps/api/window'
 import type { WebviewWindow } from '@tauri-apps/api/window';
-import type { TProject, TUser } from "../types"
+import { TProject, TSource, TUser } from "../types"
 const open = async (...paths: string[]) => {
   const p = await path.join(...paths)
   shell.open(p);
@@ -57,6 +57,47 @@ function fakeInvoke<T>(cmd: string, args?: InvokeArgs): Promise<any> {
 
       return Promise.resolve(projects.filter(p => p.name.includes(name) || p.title.toLowerCase().includes(name)))
     }
+    case "read_source_path":
+      const { path } = args
+      if (path === "/path/to/project") {
+        return Promise.resolve<TSource>({
+          path, metadata: {
+            "dataset_type": "1..18",
+            "title": "<dataset title>",
+            "name": "<dataset name(url)>",
+            "notes": "<dataset description>",
+            "publication_date": "<YYYY-MM-DD>",
+            "tag_string": "tag-1,tag-2",
+            "spatial_data": "yes|no",
+            "license_id": "unspecified",
+            // "spatial": "{\"type\": \"Polygon\", \"coordinates\": [[[151,-32],[152, -32],[152,-31]]]}",
+            "dataset_status": "final|draft|updated",
+            "update_freq": "daily|weekly|monthly|quarterly|yearly|as_required",
+            // "additional_lga": "a",
+            "author": "<prepared by>",
+            "url": "<source>",
+            "data_comment": "<comment>",
+            "access_level": "open|registered|internal|restricted",
+          }, datasets: [
+            {
+              path: 'a',
+              name: "A-dataset",
+              metadata: null,
+              resources: [
+                { path: 'a/b', name: 'B resource', metadata: null, size: 1024 * 1024 * 5 },
+                { path: 'a/c', name: 'C resource', metadata: null, size: 1024 * 1024 * 5 },
+              ]
+            },
+            {
+              path: 'b',
+              name: 'B dataset',
+              metadata: {"title": "B dataset's title"},
+              resources: [{ path: 'b/b', name: 'second B resource', metadata: {'description': "details"}, size: 1024 * 1024 * 18 }]
+            }
+          ]
+        })
+      }
+      break
     default:
       console.log("Default handler for cmd %s with args %o", cmd, args);
       return Promise.resolve({});

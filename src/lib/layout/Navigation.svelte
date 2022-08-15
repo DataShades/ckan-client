@@ -1,23 +1,25 @@
-<svelte:options immutable={true}/>
-
 <script lang="ts">
     import { Button, Container, Icon } from "sveltestrap";
     import { link } from "svelte-routing";
-    import { Project, Source } from "../../services";
+    import { Project, Flakes, Source, Queue } from "../../services";
     import { Manual } from "../component";
 
     export let step = 1;
 
     let available = 1;
+    let uploadAllowed = false;
     $: {
         if (!$Project) {
             available = 1;
-        } else if (!$Source || $Source.path || !$Source.metadata) {
+        } else if (!$Source || !$Source.path || !$Source.metadata) {
             available = 2;
         } else {
             available = 3;
         }
     }
+    $: everythingIsValid = $Source.datasets.every((d) =>
+        $Flakes.ready.includes(d.name)
+    );
 </script>
 
 <div class="w-100 progress-stepper">
@@ -69,8 +71,7 @@
 
 <Manual section={step} />
 
-<div class="mt-4 main-page-content"
-    >
+<div class="mt-4 main-page-content">
     <slot />
 </div>
 
@@ -88,10 +89,8 @@
             </div>
         {:else if step === 2}
             <div>
-                <a
-                    use:link
-                    class="btn btn-outline-primary"
-                    href="/project">Previous</a
+                <a use:link class="btn btn-outline-primary" href="/project"
+                    >Previous</a
                 >
             </div>
             <div>
@@ -104,14 +103,18 @@
             </div>
         {:else}
             <div>
-                <a
-                    use:link
-                    class="btn btn-primary"
-                    href="/source">Previous</a
-                >
+                <a use:link class="btn btn-primary" href="/source">Previous</a>
             </div>
             <div>
-                <Button color="primary">Complete</Button>
+                <Button
+                    color="primary"
+                    disabled={!$Source.datasets.length ||
+                        !everythingIsValid ||
+                        $Queue.processing}
+                    on:click={async () => Queue.fullUpload(false)}
+                >
+                    Upload all datasets
+                </Button>
             </div>
         {/if}
     </Container>

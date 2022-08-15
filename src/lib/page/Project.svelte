@@ -8,30 +8,18 @@
     Container,
     FormCheck,
     FormGroup,
-    Icon,
     Input,
-    Label,
-    ListGroup,
-    ListGroupItem,
-    Spinner,
   } from "sveltestrap";
   import { Project } from "../../services";
   import type { TProject, TUser } from "../../types";
-  import { Navigation } from "../layout";
 
   export let user: TUser;
   export let chosen: TProject;
   let name = "";
-  let queueId: any;
   let pending = true;
   let projects: TProject[] = [];
 
   onMount(search);
-
-  function queue(e: InputEvent) {
-    clearTimeout(queueId);
-    queueId = setTimeout(search, 500);
-  }
 
   async function search() {
     pending = true;
@@ -40,7 +28,6 @@
   }
 </script>
 
-<Navigation step={1}>
   <Container>
     <h2 class="page-title">Select a project</h2>
     <FormGroup class="d-flex">
@@ -72,4 +59,3 @@
       </Alert>
     {/if}
   </Container>
-</Navigation>

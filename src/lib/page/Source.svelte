@@ -2,13 +2,20 @@
   import {
     Alert,
     Button,
+    Card,
+    CardBody,
+    CardFooter,
+    CardHeader,
+    CardSubtitle,
+    CardText,
+    CardTitle,
     Container,
     FormGroup,
     Input,
     InputGroup,
   } from "sveltestrap";
   import { Source, Toaster } from "../../services";
-  import { Navigation } from "../layout";
+import { NiceMetadata } from "../component";
 
   let path = $Source.path;
   let error = "";
@@ -42,52 +49,72 @@
   };
 </script>
 
-<Navigation step={2}>
-  <Container>
-    <h2 class="page-title">Select a source</h2>
-    <p>You shold select a folder with dataset folder.</p>
-    <FormGroup class="m-5">
-      <InputGroup>
-        <Button on:click={browse}>Browse</Button>
-        <Input placeholder="Path to the submission source" bind:value={path} />
-      </InputGroup>
-      <Button on:click={checkPath} class="mt-2">Synchronize</Button>
-      {#if $Source.path}
-        <Button on:click={() => Source.open()} class="mt-2"
-          >Open directory</Button
-        >
-      {/if}
-      {#if $Source.metadata}
-        <Button on:click={() => Source.open("metadata.toml")} class="mt-2"
-          >Open metadata</Button
-        >
-      {/if}
-    </FormGroup>
-
-    {#if error}
-      <Alert color="danger" class="m-5">
-        <h4>Cannot use the path as a source</h4>
-        {error}
-      </Alert>
+<Container>
+  <h2 class="page-title">Select a source</h2>
+  <p>You shold select a folder with dataset folder.</p>
+  <FormGroup>
+    <InputGroup>
+      <Button
+        on:click={browse}
+        class="btn-select-source"
+        color="secondary"
+        outline
+      >
+        Browse
+      </Button>
+      <Input
+        placeholder="Select a folder that consists dataset directory"
+        bind:value={path}
+      />
+    </InputGroup>
+    {#if $Source.path}
+      <Button
+        on:click={() => Source.open()}
+        color="primary"
+        outline
+        class="mt-3">Open folder</Button
+      >
     {/if}
+  </FormGroup>
 
-    {#if $Source.path && !$Source.metadata}
-      <Alert color="warning" class="m-5">
-        <h4>Metadata file is not available.</h4>
-        You can create
-        <code>metadata.json</code>
-        manually or click
-        <Button size="sm" on:click={save}>this button</Button>
-        in order to create it automatically.
-        <br />
-        If metadata file exists, make sure it contains a valid JSON object -
-        <code>{"{}"}</code>
-      </Alert>
-    {:else if $Source.path && $Source.metadata}
-      <div class="m-5">
-        <h3>Master metadata</h3>
-        <pre>{JSON.stringify($Source.metadata, null, 2)}</pre>
-      </div>
-    {/if}
-  </Container>
-</Navigation>
+  {#if error}
+    <Alert color="danger">
+      <h4>Cannot use the path as a source</h4>
+      {error}
+    </Alert>
+  {/if}
+
+  {#if $Source.path && !$Source.metadata}
+    <Alert color="danger">
+      <h4>Metadata is missing</h4>
+      <p>
+        The selected folder doesn’t have metadata. You will not upload a dataset
+        without it. This app can create metadata, but you should change some
+        data there in the next stage.
+      </p>
+      <Button color="primary" on:click={save}
+        >Create metadata automatically</Button
+      >
+    </Alert>
+  {:else if $Source.path && $Source.metadata}
+    <Card>
+      <CardHeader>
+        <CardTitle>Master metadata</CardTitle>
+      </CardHeader>
+      <CardBody>
+        <CardText>
+          <NiceMetadata metadata={$Source.metadata}/>
+        </CardText>
+      </CardBody>
+      <CardFooter>
+        <Button
+          color="primary"
+          outline
+          on:click={() => Source.open("metadata.toml")}
+        >
+          Open metadata in editor
+        </Button>
+      </CardFooter>
+    </Card>
+  {/if}
+</Container>

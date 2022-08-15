@@ -2,6 +2,7 @@
   import {
     Accordion,
     AccordionItem,
+    Alert,
     Button,
     Card,
     CardBody,
@@ -13,66 +14,63 @@
   } from "sveltestrap";
   import type { TResource, TDataset } from "../../types";
   import { Source } from "../../services";
+  import { NiceMetadata } from ".";
 
   export let resource: TResource;
   export let dataset: TDataset;
-  export let validated: any | null;
   const openFile = () => Source.open(dataset.name, resource.name);
   const openMetadata = () => Source.open(dataset.name, resource.name + ".toml");
 </script>
 
 <Card class="mb-3">
   <CardHeader>
-    <CardTitle>{resource.name}</CardTitle>
+    <CardTitle>
+      {resource.name}
+      <Button class="float-end btn-link" on:click={openFile}>Open file</Button>
+    </CardTitle>
   </CardHeader>
   <CardBody>
     <Accordion>
-      {#if resource.metadata}
-        <AccordionItem>
-          <CardSubtitle slot="header">Metadata</CardSubtitle>
-          <CardText>
-            <pre>{JSON.stringify(resource.metadata, null, 2)}</pre>
-          </CardText>
-        </AccordionItem>
-      {:else}
-        <AccordionItem>
-          <CardSubtitle slot="header">Metadata is missing</CardSubtitle>
-          <CardText>
-            This resource does not have metadata file. Click
-            <Button
-              on:click={() => Source.saveResource(dataset.name, resource.name)}
-            >
-              this button
+      <AccordionItem>
+        <CardSubtitle slot="header">
+          Resource Metadata
+          {#if !resource.metadata}
+            <span class="badge bg-danger bg-opacity-25 text-black ms-3">
+              Metadata is missing
+            </span>
+          {/if}
+        </CardSubtitle>
+        <CardText>
+          {#if resource.metadata}
+            <NiceMetadata metadata={resource.metadata} />
+          {:else}
+            <Alert color="danger">
+              <h4>Metadata is missing</h4>
+              <p>
+                The selected folder doesn’t have metadata. You will not upload a
+                dataset without it. This app can create metadata, but you should
+                change some data there in the next stage.
+              </p>
+
+              <Button
+                color="primary"
+                on:click={() =>
+                  Source.saveResource(dataset.name, resource.name)}
+              >
+                Create metadata automatically
+              </Button>
+            </Alert>
+          {/if}
+        </CardText>
+
+        {#if resource.metadata}
+          <CardFooter>
+            <Button color="primary" outline on:click={openMetadata}>
+              Open metadata in editor
             </Button>
-            in order to create it.
-          </CardText>
-        </AccordionItem>
-      {/if}
-      {#if validated}
-        {#if Object.keys(validated.extras.errors).length}
-          <AccordionItem>
-            <CardSubtitle slot="header">Errors</CardSubtitle>
-            <CardText>
-              <pre>{JSON.stringify(validated.extras.errors, null, 2)}</pre>
-            </CardText>
-          </AccordionItem>
-        {:else}
-          <AccordionItem>
-            <CardSubtitle slot="header">
-              Preview of the final resource
-            </CardSubtitle>
-            <CardText>
-              <pre>{JSON.stringify(validated.data, null, 2)}</pre>
-            </CardText>
-          </AccordionItem>
+          </CardFooter>
         {/if}
-      {/if}
+      </AccordionItem>
     </Accordion>
   </CardBody>
-  <CardFooter>
-    <Button on:click={openFile}>Open file</Button>
-    {#if resource.metadata}
-      <Button on:click={openMetadata}>Open metadata</Button>
-    {/if}
-  </CardFooter>
 </Card>
