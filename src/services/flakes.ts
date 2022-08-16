@@ -4,7 +4,11 @@ import Source from "./source";
 
 const store = derived([Submission, Source], ([flakes, source], set) => {
 
-  const uploads = {};
+  const uploads = {
+    // "A-dataset/B resource": {data: {completed: true, bytes_uploaded: 20, size: 100}},
+    // "A-dataset/C resource": {data: {completed: true, bytes_uploaded: 30, size: 100}},
+    // "B dataset/second B resource": {data: {completed: false, bytes_uploaded: 50, size: 100}},
+  };
   const datasets = {};
   const resources = {};
 

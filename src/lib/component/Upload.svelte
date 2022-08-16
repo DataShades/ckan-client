@@ -2,9 +2,10 @@
   import { createEventDispatcher } from "svelte";
   import type { TDataset, TResource } from "src/types";
 
-  import { Button, ButtonGroup, Icon, Progress } from "sveltestrap";
+  import { Button, Icon, Progress } from "sveltestrap";
 
   import { Flakes } from "../../services";
+  import { humanizeSize } from "../../utils";
 
   export let details: any;
   export let queued: boolean;
@@ -26,11 +27,28 @@
       !Object.keys(d.extras.errors).length &&
       !Object.keys(r.extras.errors).length;
   });
+  let progress = details ? (
+    (details.data.bytes_uploaded / (details.data.size + 1)) *
+    100
+  ).toFixed(0) : 0;
 </script>
 
-{resource.name}
-<ButtonGroup size="sm" class="float-end">
+<div class="item-inner">
+  {resource.name}
   <Button
+    disabled={!queued}
+    class="float-end"
+    title="Pause upload"
+    color="link"
+    on:click={() => dispatch("pause", { dataset, resource })}
+  >
+    <Icon name="pause-circle-fill" />
+  </Button>
+
+  <Button
+    color="primary"
+    class="float-end"
+    outline
     disabled={!validated ||
       !resource.metadata ||
       pending ||
@@ -39,26 +57,14 @@
     on:click={() => dispatch("upload", { dataset, resource })}
     title="Start/resume upload"
   >
-    <Icon name="cloud-upload" />
-    start/resume
+    <Icon name="cloud-upload-fill" />
+    Upload ({humanizeSize(resource.size)})
   </Button>
-
-  <Button
-    disabled={!queued}
-    title="Pause upload"
-    on:click={() => dispatch("pause", { dataset, resource })}
-  >
-    <Icon name="pause-circle" />
-    pause
-  </Button>
-</ButtonGroup>
-
+</div>
 {#if details}
-  <hr />
-  <Progress
-    striped
-    animated={pending}
-    color={details.data.completed ? "success" : "info"}
-    value={((details.data.bytes_uploaded + 1) / (details.data.size + 1)) * 100}
-  />
+  <div class:opacity-75={(details && details.data.completed) || !queued}>
+    <Progress color="primary" value={progress}>
+      {progress}%
+    </Progress>
+  </div>
 {/if}

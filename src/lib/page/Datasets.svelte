@@ -33,8 +33,7 @@
   $: totalSize = humanizeSize(
     $Source.datasets.reduce(
       (total: number, d: TDataset) =>
-        total +
-        d.resources.reduce((total, r) => total + (r.size || 0), 0),
+        total + d.resources.reduce((total, r) => total + (r.size || 0), 0),
       0
     )
   );
@@ -43,7 +42,8 @@
     $Flakes.ready.includes(d.name)
   );
 </script>
-<Uploads/>
+
+<Uploads on:upload={(e) => upload(e.detail.dataset)} />
 <Container class="validate-page">
   <h2 class="page-title">Validate datasets and upload</h2>
   <p>After successful validation, upload your datasets to the portal</p>

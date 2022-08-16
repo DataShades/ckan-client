@@ -7,7 +7,6 @@
     export let step = 1;
 
     let available = 1;
-    let uploadAllowed = false;
     $: {
         if (!$Project) {
             available = 1;
@@ -20,6 +19,13 @@
     $: everythingIsValid = $Source.datasets.every((d) =>
         $Flakes.ready.includes(d.name)
     );
+    const isCompleted = (...datasets) =>
+        datasets.every((dataset) =>
+            dataset.resources.every((r) => {
+                const details = $Flakes.uploads[`${dataset.name}/${r.name}`];
+                return details && details.data.completed;
+            })
+        );
 </script>
 
 <div class="w-100 progress-stepper">
@@ -106,15 +112,17 @@
                 <a use:link class="btn btn-primary" href="/source">Previous</a>
             </div>
             <div>
-                <Button
-                    color="primary"
-                    disabled={!$Source.datasets.length ||
-                        !everythingIsValid ||
-                        $Queue.processing}
-                    on:click={async () => Queue.fullUpload(false)}
-                >
-                    Upload all datasets
-                </Button>
+                {#if !isCompleted(...$Source.datasets)}
+                    <Button
+                        color="primary"
+                        disabled={!$Source.datasets.length ||
+                            !everythingIsValid ||
+                            $Queue.processing}
+                        on:click={async () => Queue.fullUpload(false)}
+                    >
+                        Upload all datasets
+                    </Button>
+                {/if}
             </div>
         {/if}
     </Container>

@@ -108,18 +108,20 @@ $header-height: 62px;
   }
 
   .offcanvas-toggle-right {
-    left:initial;
+    left: initial;
     right: -$grid-gutter-width;
     padding-left: 1rem;
     padding-right: calc($grid-gutter-width/2) + 1.5rem;
     transition: padding-right .2s ease-in-out;
     top: 0;
+
     &:hover {
       padding-left: 1rem;
       padding-right: $grid-gutter-width + 1.5rem;
     }
 
- }
+  }
+
   .manual-restricted-width {
     max-width: 712px;
     margin: auto;
@@ -323,4 +325,62 @@ $header-height: 62px;
 
 .badge {
   font-weight: 500;
+}
+
+.uploads {
+  .offcanvas-header {
+    border-bottom: none;
+  }
+
+  .btn-link {
+    text-decoration: none;
+  }
+
+  .offcanvas-body {
+    padding: 0;
+  }
+
+  .global-upload-actions {
+    padding: 1rem;
+    border-bottom: 1px solid #CFD4D9;
+  }
+
+  .upload-listing {
+    padding: 1rem;
+    padding-bottom: 120px;
+  }
+
+  .accordion-button {
+    background: $light-grey;
+
+    &:not(.collapsed) {
+      background: white;
+    }
+  }
+
+  .dataset-progress-item {
+    padding-bottom: 1.5rem;
+
+    .progress {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+  }
+
+  .resource-progress-item {
+
+    background: $light-grey;
+    border: 1px solid #CFD4D9;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 1.125rem;
+    line-height: 38px;
+    padding-bottom: 0;
+
+    .item-inner {
+      padding: 25px;
+    }
+  }
 }

@@ -4,7 +4,7 @@ import * as shell from '@tauri-apps/api/shell';
 import * as path from '@tauri-apps/api/path';
 import { appWindow } from '@tauri-apps/api/window'
 import type { WebviewWindow } from '@tauri-apps/api/window';
-import { TProject, TSource, TUser } from "../types"
+import type { TProject, TSource, TUser } from "../types"
 const open = async (...paths: string[]) => {
   const p = await path.join(...paths)
   shell.open(p);
@@ -38,7 +38,14 @@ function fakeInvoke<T>(cmd: string, args?: InvokeArgs): Promise<any> {
       return Promise.reject("In the thest environment url and token must be the identical");
     }
     case "show_submission": {
-      return Promise.resolve([])
+      return Promise.resolve([
+        { extras: {type: 'validated-dataset', errors: {}, dataset: "A-dataset"} },
+        { extras: {type: 'validated-resource', errors: {}, dataset: "A-dataset", resource: "B resource"} },
+        { extras: {type: 'validated-resource', errors: {}, dataset: "A-dataset", resource: "C resource"} },
+        { extras: {type: 'validated-dataset', errors: {}, dataset: "B dataset"} },
+        { extras: {type: 'validated-resource', errors: {}, dataset: "B dataset", resource: "second B resource"} },
+      ])
+
     }
     case "list_projects": {
       const { name } = args
@@ -82,17 +89,18 @@ function fakeInvoke<T>(cmd: string, args?: InvokeArgs): Promise<any> {
             {
               path: 'a',
               name: "A-dataset",
-              metadata: null,
+              metadata:{},
+
               resources: [
-                { path: 'a/b', name: 'B resource', metadata: null, size: 1024 * 1024 * 5 },
-                { path: 'a/c', name: 'C resource', metadata: null, size: 1024 * 1024 * 5 },
+                { path: 'a/b', name: 'B resource', metadata: {}, size: 1024 * 1024 * 5 },
+                { path: 'a/c', name: 'C resource', metadata: {}, size: 1024 * 1024 * 5 },
               ]
             },
             {
               path: 'b',
               name: 'B dataset',
-              metadata: {"title": "B dataset's title"},
-              resources: [{ path: 'b/b', name: 'second B resource', metadata: {'description': "details"}, size: 1024 * 1024 * 18 }]
+              metadata: { "title": "B dataset's title" },
+              resources: [{ path: 'b/b', name: 'second B resource', metadata: { 'description': "details" }, size: 1024 * 1024 * 18 }]
             }
           ]
         })

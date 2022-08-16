@@ -25,8 +25,6 @@ Storage.getItem(KEY).then(async (portal: PortalDetails | null) => {
     if (User.resolve(portal)) {
       console.debug("[BUT] User resoved. Navigate to /project")
       navigate("/project")
-      // TODO: drop
-      navigate("/datasets")
     }
   }
 })
