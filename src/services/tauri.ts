@@ -89,7 +89,24 @@ function fakeInvoke<T>(cmd: string, args?: InvokeArgs): Promise<any> {
             {
               path: 'a',
               name: "A-dataset",
-              metadata:{},
+              metadata:{
+  "dataset_type": "1..18",
+  "title": "<dataset title>",
+  "name": "<dataset name(url)>",
+  "notes": "<dataset description>",
+  "publication_date": "<YYYY-MM-DD>",
+  "tag_string": "tag-1,tag-2",
+  "spatial_data": "yes|no",
+  "license_id": "unspecified",
+  // "spatial": "{\"type\": \"Polygon\", \"coordinates\": [[[151,-32],[152, -32],[152,-31]]]}",
+  "dataset_status": "final|draft|updated",
+  "update_freq": "daily|weekly|monthly|quarterly|yearly|as_required",
+  // "additional_lga": "a",
+  "author": "<prepared by>",
+  "url": "<source>",
+  "data_comment": "<comment>",
+  "access_level": "open|registered|internal|restricted",
+},
 
               resources: [
                 { path: 'a/b', name: 'B resource', metadata: {}, size: 1024 * 1024 * 5 },
