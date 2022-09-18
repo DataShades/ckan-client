@@ -7,8 +7,8 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "CKAN Client",
-    "version": "0.1.1"
+    "productName": "Submission manager",
+    "version": "0.1.2"
   },
   "tauri": {
     "allowlist": {
@@ -51,7 +51,11 @@
       "csp": null
     },
     "updater": {
-      "active": false
+      "active": true,
+      "endpoints": [
+        "https://gist.githubusercontent.com/smotornyuk/34d7923af5770797538d9360172e1186/raw/gistfile1.txt"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU3NUJGMTVCNzBDMDBDRDgKUldUWURNQndXL0ZiVnpSZGxhSzczVHJrV3dsbDBtWUFBVEJHZFNSR3p4RDM2bEJmdmFWMGEwamEK"
     },
     "windows": [
       {
