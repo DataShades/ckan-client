@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "Submission manager",
-    "version": "0.1.2"
+    "version": "0.1.3"
   },
   "tauri": {
     "allowlist": {
@@ -62,7 +62,7 @@
         "fullscreen": false,
         "height": 800,
         "resizable": true,
-        "title": "Submission manager(not the latest version)",
+        "title": "Submission manager",
       "width": 800,
       "minWidth": 800,
       "minHeight": 800
