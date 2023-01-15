@@ -7,7 +7,6 @@ use std::ffi::OsStr;
 use ckanapi::CKANError;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-
 pub type Result<T> = core::result::Result<T, FdpError>;
 
 #[derive(Debug, Deserialize, Serialize)]
@@ -33,10 +32,6 @@ impl From<CKANError> for FdpError {
     }
 }
 
-pub fn read_source_path<T: AsRef<OsStr>>(path: T) -> Result<types::Source> {
-    types::Source::new(path).ok_or("Directory does not exist".into())
-}
-
 pub fn save_root_metadata<T: AsRef<OsStr>>(path: T, metadata: Value) -> Result<()> {
     let mut source = read_source_path(&path)?;
     source.metadata = types::Metadata::Object(metadata);
@@ -49,6 +44,10 @@ pub fn save_root_metadata<T: AsRef<OsStr>>(path: T, metadata: Value) -> Result<(
     } else {
         Ok(())
     }
+}
+
+pub fn read_source_path<T: AsRef<OsStr>>(path: T) -> Result<types::Source> {
+    types::Source::new(path).ok_or("Directory does not exist".into())
 }
 
 pub fn add_dataset<T: AsRef<OsStr>>(path: T, name: &str) -> Result<()> {
@@ -73,51 +72,5 @@ pub fn add_resource<T: AsRef<OsStr>>(path: T, dataset: &str, name: &str) -> Resu
                 Err("Resource cannot be created".into())
             }
         },
-    }
-}
-
-pub fn save_dataset_metadata<T: AsRef<OsStr>>(path: T, name: &str, metadata: Value) -> Result<()> {
-    match read_source_path(&path)?.get_dataset_mut(name) {
-        None => Err("Cannot locate the dataset".into()),
-        Some(dataset) => {
-            dataset.metadata = types::Metadata::Object(metadata);
-            if let Err(err) = dataset
-                .metadata
-                .write(&dataset.metadata_path(), types::dataset_comments())
-            {
-                log::error!("{}", err);
-                Err("Cannot save the metadata".into())
-            } else {
-                Ok(())
-            }
-        }
-    }
-}
-
-pub fn save_resource_metadata<T: AsRef<OsStr>>(
-    path: T,
-    dataset: &str,
-    name: &str,
-    metadata: Value,
-) -> Result<()> {
-    match read_source_path(&path)?
-        .datasets
-        .into_iter()
-        .find(|d| d.name == dataset)
-        .and_then(|d| d.resources.into_iter().find(|r| r.name == name))
-    {
-        None => Err("Cannot locate the resource".into()),
-        Some(mut resource) => {
-            resource.metadata = types::Metadata::Object(metadata);
-            if let Err(err) = resource
-                .metadata
-                .write(&resource.metadata_path(), types::resource_comments())
-            {
-                log::error!("{}", err);
-                Err("Cannot save the metadata".into())
-            } else {
-                Ok(())
-            }
-        }
     }
 }

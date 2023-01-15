@@ -48,17 +48,9 @@
               <h4>Metadata is missing</h4>
               <p>
                 The selected folder doesn’t have metadata. You will not upload a
-                dataset without it. This app can create metadata, but you should
-                change some data there in the next stage.
+                dataset without it.
               </p>
 
-              <Button
-                color="primary"
-                on:click={() =>
-                  Source.saveResource(dataset.name, resource.name)}
-              >
-                Create metadata automatically
-              </Button>
             </Alert>
           {/if}
         </CardText>

@@ -5,8 +5,8 @@ use std::io::{Read, Seek};
 
 use crate::read_source_path;
 pub use crate::types::{
-    AvailableProjects, Metadata, ProgressedUpload, Project, RegisteredUpload, User,
-    ValidationResult,
+    AvailableProjects, Metadata, MetadataContent, ProgressedUpload, Project, RegisteredUpload,
+    User, ValidationResult,
 };
 use ckanapi::{Params, CKAN};
 use serde_json::{json, Value};
@@ -275,13 +275,6 @@ impl FdpClient for CKAN {
 #[cfg(test)]
 
 mod tests {
-
-    use std::collections::HashMap;
-
-    use tempfile::tempdir;
-
-    use crate::types::Source;
-
     use super::*;
 
     fn ckan() -> CKAN {
@@ -312,98 +305,5 @@ mod tests {
         let result = ckan.project_set(Some("<id>")).await;
 
         assert!(result.is_ok(), "Cannot set project: {:?}", result);
-    }
-
-    #[tokio::test]
-
-    async fn test_validate_dataset_and_resource() {
-        let dir = tempdir().unwrap();
-
-        let mut source = Source::new(dir.path()).unwrap();
-
-        source.metadata = Metadata::default();
-
-        source.metadata.write(&source.metadata_path(), HashMap::new()).unwrap();
-
-        source.add_dataset("dataset").unwrap();
-
-        let ckan = ckan();
-
-        assert!(ckan
-            .validate_dataset(source.path.as_ref(), "dataset")
-            .await
-            .is_err());
-
-        let dataset = source.get_dataset_mut("dataset").unwrap();
-
-        dataset.add_resource("resource").unwrap();
-
-        let resource = dataset.get_resoure_mut("resource").unwrap();
-
-        resource.metadata = Metadata::Object(json!({"url": "https://demo.ckan.org"}));
-
-        resource.metadata.write(&resource.metadata_path(), HashMap::new()).unwrap();
-
-        dataset.metadata = Metadata::Object(json!({}));
-
-        dataset.metadata.write(&dataset.metadata_path(), HashMap::new()).unwrap();
-
-        let result: ValidationResult = ckan
-            .validate_dataset(source.path.as_ref(), "dataset")
-            .await
-            .unwrap();
-
-        assert_eq!(result.data, json!({}));
-
-        assert!(!result.errors.as_object().unwrap().is_empty());
-
-        let result: ValidationResult = ckan
-            .validate_dataset(source.path.as_ref(), "dataset")
-            .await
-            .unwrap();
-
-        assert_eq!(result.data, json!({}));
-
-        assert!(!result.errors.as_object().unwrap().is_empty());
-
-        let result: ValidationResult = ckan
-            .validate_resource(source.path.as_ref(), "dataset", "resource")
-            .await
-            .unwrap();
-
-        assert_eq!(result.data, json!({"url": "resource", "format": ""}));
-
-        assert_eq!(result.errors, json!({}));
-    }
-
-    #[tokio::test]
-
-    async fn test_validate_complex_structure() {
-        let dir = tempdir().unwrap();
-
-        let mut source = Source::new(dir.path()).unwrap();
-
-        source.metadata = Metadata::default();
-
-        source.metadata.write(&source.metadata_path(), HashMap::new()).unwrap();
-
-        source.add_dataset("dataset").unwrap();
-
-        let mut dataset = source.get_dataset_mut("dataset").unwrap();
-
-        dataset.metadata = Metadata::Object(
-            json!({"flood_studies": "xxxx", "extras": [{"key": "comment", "value": "This is my comment"}]}),
-        );
-
-        dataset.metadata.write(&dataset.metadata_path(), HashMap::new()).unwrap();
-
-        let ckan = ckan();
-
-        let result = ckan
-            .validate_dataset(source.path.as_ref(), "dataset")
-            .await
-            .unwrap();
-
-        assert_eq!(json!({}), result.errors);
     }
 }

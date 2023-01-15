@@ -43,21 +43,6 @@ pub async fn save_root_metadata(path: &str, metadata: Value) -> fdp::Result<()> 
 }
 
 #[tauri::command]
-pub async fn save_dataset_metadata(path: &str, name: &str, metadata: Value) -> fdp::Result<()> {
-    fdp::save_dataset_metadata(path, name, metadata)
-}
-
-#[tauri::command]
-pub async fn save_resource_metadata(
-    path: &str,
-    dataset: &str,
-    name: &str,
-    metadata: Value,
-) -> fdp::Result<()> {
-    fdp::save_resource_metadata(path, dataset, name, metadata)
-}
-
-#[tauri::command]
 pub async fn add_dataset(path: &str, name: &str) -> fdp::Result<()> {
     fdp::add_dataset(path, name)
 }

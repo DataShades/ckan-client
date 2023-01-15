@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.56"
 ckanapi = { version = "0.1.1", path = "../ckanapi" }
+csv = "1.1.6"
 env_logger = "0.9.0"
 log = "0.4.17"
 serde = { version = "1.0.137", features = ["derive"] }

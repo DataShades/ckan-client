@@ -3,7 +3,7 @@ mod source;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub use self::source::{Dataset, Metadata, Resource, Source, dataset_comments, resource_comments};
+pub use self::source::{Dataset, Metadata, MetadataContent, Resource, Source, dataset_comments, resource_comments};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct AvailableProjects {

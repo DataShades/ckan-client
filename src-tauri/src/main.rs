@@ -20,8 +20,6 @@ fn main() {
 
             commands::read_source_path,
             commands::save_root_metadata,
-            commands::save_dataset_metadata,
-            commands::save_resource_metadata,
             commands::add_dataset,
             commands::validate_dataset,
             commands::validate_resource,

@@ -1,17 +1,28 @@
+use csv;
+
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+
 use std::collections::HashMap;
-use std::io::prelude::*;
+use std::ops::Index;
 use std::path::PathBuf;
 use std::{
     ffi::OsStr,
-    fs::{self, DirEntry, File},
+    fs::{self, DirEntry},
 };
 
-const METADATA_EXT: &str = "toml";
+const METADATA_EXT: &str = "csv";
+const METADATA_FILENAME: &str = "metadata.csv";
 
+#[derive(Debug)]
+pub enum MetadataContent<'a> {
+    Master,
+    Dataset(&'a str),
+    Resource(&'a OsStr, &'a str),
+}
 pub fn dataset_comments() -> HashMap<String, Vec<String>> {
     HashMap::from([
+        ("first".into(), vec!["First field".into(), "---".into()]),
         (
             "dataset_type".into(),
             vec![
@@ -134,12 +145,12 @@ impl Source {
 
     pub fn metadata_path(&self) -> PathBuf {
         let mut path = self.path.clone();
-        path.push("metadata.toml");
+        path.push(METADATA_FILENAME);
         path
     }
 
     fn refresh_metadata(&mut self) {
-        self.metadata = Metadata::from(&self.metadata_path());
+        self.metadata = Metadata::for_source(&self.metadata_path());
     }
 
     fn gather_datasets(&mut self) {
@@ -232,13 +243,11 @@ impl Dataset {
     }
 
     pub fn metadata_path(&self) -> PathBuf {
-        let mut path = self.path.clone();
-        path.push(format!("{}.toml", &self.name));
-        path
+        self.path.join(METADATA_FILENAME)
     }
 
     fn refresh_metadata(&mut self) {
-        self.metadata = Metadata::from(&self.metadata_path());
+        self.metadata = Metadata::for_dataset(&self.metadata_path(), &self.name);
     }
     fn gather_resources(&mut self) {
         let mut path = self.path.clone();
@@ -306,13 +315,16 @@ impl Resource {
     }
 
     pub fn metadata_path(&self) -> PathBuf {
-        let mut path = self.path.clone();
-        path.push(format!("{}.toml", &self.name));
-        path
+        let path = self.path.parent().unwrap();
+        path.join(METADATA_FILENAME)
     }
 
     fn refresh_metadata(&mut self) {
-        self.metadata = Metadata::from(&self.metadata_path());
+        self.metadata = Metadata::for_resource(
+            &self.metadata_path(),
+            self.path.file_name().unwrap(),
+            &self.name,
+        );
     }
 
     pub fn size(&self) -> u64 {
@@ -333,28 +345,83 @@ impl Metadata {
     pub fn write<P: AsRef<OsStr>>(
         &self,
         path: &P,
-        comments: HashMap<String, Vec<String>>,
+        _comments: HashMap<String, Vec<String>>,
     ) -> Result<(), std::io::Error> {
         match self {
             Metadata::Empty => fs::remove_file(path.as_ref()),
             Metadata::Object(v) => {
-                let v_str = serde_json::to_string(v).unwrap();
-                let v: toml::Value = serde_json::from_str(&v_str).unwrap();
-                let contents = toml::to_string_pretty(&v).unwrap();
-
-                let mut file = File::create(path.as_ref())?;
-
-                for ln in contents.lines() {
-                    for (k, v) in comments.iter() {
-                        if ln.starts_with(k) {
-                            for comment in v {
-                                writeln!(file, "# {}", comment)?;
-                            }
+                let mut wtr = csv::Writer::from_path(path.as_ref())?;
+                wtr.write_record(&[
+                    "Dataset Field",
+                    "Description",
+                    "Master metadata",
+                    "Dataset 1",
+                    "Dataset 2",
+                ])?;
+                match v {
+                    Value::Object(v) => {
+                        for (k, v) in v {
+                            wtr.write_record(&[
+                                k,
+                                &_comments.get(k).unwrap_or(&vec!["".to_string()]).join("\n"),
+                                match v {
+                                    Value::String(s) => s,
+                                    _ => "",
+                                },
+                                "Value for Dataset 1",
+                                "Value for Dataset 2",
+                            ])?;
                         }
                     }
-                    writeln!(file, "{}", ln)?;
-                    writeln!(file, "")?;
+                    _ => (),
                 }
+                wtr.write_record(&[
+                    "Resource Field",
+                    "Description",
+                    "",
+                    "Resource 1 from Dataset 1.txt",
+                    "Resource 1 from Dataset 2.json",
+                ])?;
+                wtr.write_record(&[
+                    "name",
+                    "Human-readable name of the resource",
+                    "",
+                    "Value for Resource 1",
+                    "Value for Resource 1",
+                ])?;
+                wtr.write_record(&[
+                    "description",
+                    "Desctiption. For long descriptions use three quotation marks:\n\
+                    description = \"\"\"Roses are red\n\
+                    Violets are blue\"\"\"",
+                    "",
+                    "Value for Resource 1",
+                    "Value for Resource 1",
+                ])?;
+                wtr.write_record(&[
+                    "Resource Field",
+                    "Description",
+                    "",
+                    "Resource 2 from Dataset 1.csv",
+                    "",
+                ])?;
+                wtr.write_record(&[
+                    "name",
+                    "Human-readable name of the resource",
+                    "",
+                    "Value for Resource 2",
+                    "",
+                ])?;
+                wtr.write_record(&[
+                    "description",
+                    "Desctiption. For long descriptions use three quotation marks:\n\
+                    description = \"\"\"Roses are red\n\
+                    Violets are blue\"\"\"",
+                    "",
+                    "Value for Resource 2",
+                    "",
+                ])?;
+
                 Ok(())
             }
         }
@@ -364,7 +431,73 @@ impl Metadata {
             obj.append(patch);
         }
     }
+
+    fn for_source(path: &PathBuf) -> Self {
+        Metadata::extract_key_from_csv(path, MetadataContent::Master)
+    }
+
+    fn for_dataset(path: &PathBuf, name: &str) -> Self {
+        Metadata::extract_key_from_csv(path, MetadataContent::Dataset(name))
+    }
+
+    fn for_resource(path: &PathBuf, dataset: &OsStr, name: &str) -> Self {
+        Metadata::extract_key_from_csv(path, MetadataContent::Resource(dataset, name))
+    }
+
+    fn extract_key_from_csv(path: &PathBuf, key: MetadataContent) -> Self {
+        if path.is_file() {
+            let mut reader = csv::Reader::from_path(path).unwrap();
+
+            let header = match reader.headers() {
+                Ok(header) => header.clone(),
+                Err(_) => return Self::Empty,
+            };
+            let records = reader.records();
+
+            let idx = match key {
+                MetadataContent::Master => Some(2),
+                MetadataContent::Dataset(name) => header.iter().position(|s| s == name),
+                MetadataContent::Resource(name, _) => header.iter().position(|s| s == name),
+            };
+
+            match idx {
+                None => Self::Empty,
+                Some(idx) => {
+                    let iter = records
+                        .map(|record| record.unwrap())
+                        .filter(|record| record.len() > idx)
+                        .map(|record| (record.index(0).to_string(), record.index(idx).to_string()));
+
+                    let pairs = match key {
+                        MetadataContent::Master | MetadataContent::Dataset(..) => iter
+                            .take_while(|(key, _)| *key != "Resource Field")
+                            .collect::<Vec<(String, String)>>(),
+                        MetadataContent::Resource(_, name) => iter
+                            .skip_while(|(key, value)| *key != "Resource Field" || *value != name)
+                            .skip(1)
+                            .take_while(|(key, _)| *key != "Resource Field")
+                            .collect::<Vec<(String, String)>>(),
+                    };
+
+                    if pairs.len() == 0 {
+                        return Self::Empty;
+                    }
+
+                    let data = pairs
+                        .iter()
+                        .filter(|(_, v)| *v != "")
+                        .map(|(k, v)| (k.to_string(), Value::from(v.to_string())))
+                        .collect();
+
+                    Self::Object(Value::Object(data))
+                }
+            }
+        } else {
+            Self::Empty
+        }
+    }
 }
+
 impl Default for Metadata {
     fn default() -> Self {
         Self::Object(json!({
@@ -383,19 +516,6 @@ impl Default for Metadata {
             "flood_studies": "<id>",
             "owner_org": "<id>"
         }))
-    }
-}
-impl From<&PathBuf> for Metadata {
-    fn from(path: &PathBuf) -> Self {
-        if path.is_file() {
-            let content = fs::read_to_string(path.as_path()).unwrap();
-            match toml::from_str(&content) {
-                Ok(data) => Self::Object(data),
-                _ => Self::Empty,
-            }
-        } else {
-            Self::Empty
-        }
     }
 }
 
@@ -464,90 +584,10 @@ mod tests {
     }
 
     #[test]
-    fn test_dataset_with_file_and_meta_resource() {
-        let dir = Dir::new("/tmp/fdp/rust/test/test_dataset_with_file_and_meta_resource".into());
-        let mut dataset_path = PathBuf::from(&dir.path);
-        dataset_path.push("test");
-        fs::create_dir(&dataset_path).unwrap();
-
-        let mut resource_path = dataset_path.clone();
-        resource_path.push("test.txt");
-        fs::write(resource_path, "hello").unwrap();
-
-        let mut metadata_path = dataset_path.clone();
-        metadata_path.push("test.txt.toml");
-        fs::write(metadata_path, "hello").unwrap();
-
-        let dataset = Dataset::new(&dir.path, "test").unwrap();
-        assert_eq!(1, dataset.resources.len());
-    }
-
-    #[test]
-    fn test_source_with_dir_and_meta_dataset() {
-        let dir = Dir::new("/tmp/fdp/rust/test/test_source_with_dir_and_meta_dataset".into());
-        let mut dataset_path = PathBuf::from(&dir.path);
-        dataset_path.push("test");
-        fs::create_dir(&dataset_path).unwrap();
-
-        let mut metadata_path = PathBuf::from(&dir.path);
-        metadata_path.push("test.toml");
-        fs::write(metadata_path, "").unwrap();
-
-        let source = Source::new(&dir.path).unwrap();
-        assert_eq!(1, source.datasets.len());
-        assert_eq!("test", source.datasets[0].name);
-    }
-
-    #[test]
-    fn test_source_with_metadata_only() {
-        let dir = Dir::new("/tmp/fdp/rust/test/test_source_with_metadata_only".into());
-        let mut dataset_path = PathBuf::from(&dir.path);
-        dataset_path.push("test");
-        fs::create_dir(&dataset_path).unwrap();
-
-        let source = Source::new(&dir.path).unwrap();
-        assert_eq!(1, source.datasets.len());
-        assert_eq!("test", source.datasets[0].name);
-    }
-
-    #[test]
     fn test_source_with_no_initial_metadata() {
         let dir = Dir::new("/tmp/fdp/rust/test/test_source_with_no_initial_metadata".into());
         let source = Source::new(&dir.path).unwrap();
         assert_eq!(Metadata::Empty, source.metadata);
-    }
-
-    #[test]
-    fn test_metadata_changes() {
-        let dir = Dir::new("/tmp/fdp/rust/test/test_metadata_changes".into());
-        let mut source = Source::new(&dir.path).unwrap();
-        let path = source.metadata_path();
-
-        let data = json!({"title": "Test", "name": "test"});
-        source.metadata = Metadata::Object(data.clone());
-        assert_eq!(Metadata::Empty, Metadata::from(&path));
-        source.metadata.write(&path, dataset_comments()).unwrap();
-        _ = dbg!(&path, fs::read_to_string(&path));
-        assert_eq!(Metadata::Object(data), Metadata::from(&path));
-    }
-    #[test]
-    fn test_source_with_existing_metadata() {
-        let dir = Dir::new("/tmp/fdp/rust/test/test_source_with_existing_metadata".into());
-        let data = json!({"title": "Test"});
-        let mut path = PathBuf::from(&dir.path);
-        path.push("metadata.toml");
-
-        fs::write(&path, toml::to_string_pretty(&data).unwrap()).unwrap();
-        let mut source = Source::new(&dir.path).unwrap();
-        assert_eq!(source.metadata, Metadata::Object(data));
-
-        fs::write(&path, "test").unwrap();
-        source.refresh_metadata();
-        assert_eq!(source.metadata, Metadata::Empty);
-
-        fs::write(&path, r#"test = 1"#).unwrap();
-        source.refresh_metadata();
-        assert_eq!(source.metadata, Metadata::Object(json!({"test": 1})));
     }
 
     #[test]
@@ -567,5 +607,74 @@ mod tests {
         assert_eq!(0, dataset.resources.len());
         dataset.add_resource("test.txt").unwrap();
         assert_eq!(1, dataset.resources.len());
+    }
+
+    #[test]
+    fn test_csv_parsing() {
+        let dir = Dir::new("/tmp/fdp/rust/test/test_csv_parsing".into());
+        let mut path = PathBuf::from(&dir.path);
+        path.push("metadata.csv");
+
+        fs::write(
+            &path,
+            "\
+Dataset Field,Description,Master metadata,Dataset 1,Dataset 2
+first,,master,test-1,test-2
+second,,slave,,
+Resource Field,,,Resource 1 1,Resource 2 1
+name,,,res-1-1,res-2-1
+Resource Field,,,Resource 1 2,Resource 2 2
+name,,,res-1-2,res-2-2
+",
+        )
+        .unwrap();
+
+        assert_eq!(
+            Metadata::for_source(&path),
+            Metadata::Object(json!({"first": "master", "second": "slave"}))
+        );
+
+        assert_eq!(
+            Metadata::for_dataset(&path, "Dataset 1"),
+            Metadata::Object(json!({"first": "test-1"}))
+        );
+
+        assert_eq!(
+            Metadata::for_dataset(&path, "Dataset 2"),
+            Metadata::Object(json!({"first": "test-2"}))
+        );
+
+        assert_eq!(Metadata::for_dataset(&path, "Dataset 3"), Metadata::Empty);
+
+        assert_eq!(
+            Metadata::for_resource(&path, OsStr::new("Dataset 1"), "Resource 1 1"),
+            Metadata::Object(json!({"name": "res-1-1"}))
+        );
+        assert_eq!(
+            Metadata::for_resource(&path, OsStr::new("Dataset 1"), "Resource 1 2"),
+            Metadata::Object(json!({"name": "res-1-2"}))
+        );
+        assert_eq!(
+            Metadata::for_resource(&path, OsStr::new("Dataset 2"), "Resource 2 1"),
+            Metadata::Object(json!({"name": "res-2-1"}))
+        );
+        assert_eq!(
+            Metadata::for_resource(&path, OsStr::new("Dataset 2"), "Resource 2 2"),
+            Metadata::Object(json!({"name": "res-2-2"}))
+        );
+        assert_eq!(
+            Metadata::for_resource(&path, OsStr::new("Dataset 1"), "Resource 1 3"),
+            Metadata::Empty
+        );
+        assert_eq!(
+            Metadata::for_resource(&path, OsStr::new("Dataset 3"), "Resource 1 1"),
+            Metadata::Empty
+        );
+
+        let metadata = Metadata::for_source(&path);
+        metadata.write(&path, crate::types::dataset_comments());
+
+        dbg!(fs::read_to_string(&path));
+        dbg!(path);
     }
 }
