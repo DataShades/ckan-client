@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "Submission manager",
+    "productName": "FDP Bulk Upload Tool",
     "version": "0.1.4"
   },
   "tauri": {
@@ -62,7 +62,7 @@
         "fullscreen": false,
         "height": 800,
         "resizable": true,
-        "title": "Submission manager",
+        "title": "FDP Bulk Upload Tool",
       "width": 800,
       "minWidth": 800,
       "minHeight": 800

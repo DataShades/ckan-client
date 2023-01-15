@@ -51,7 +51,7 @@ import { NiceMetadata } from "../component";
 
 <Container>
   <h2 class="page-title">Select a source</h2>
-  <p>You shold select a folder with dataset folder.</p>
+  <p>Select a folder containing dataset folders</p>
   <FormGroup>
     <InputGroup>
       <Button

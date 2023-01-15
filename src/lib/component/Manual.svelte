@@ -95,15 +95,8 @@
                         <AccordionItem active={$Manual.active === 2}>
                             <span slot="header">
                                 <span class="step-circle">2</span>
-                                Select a source
+                                Select folder containing dataset folders
                             </span>
-                            <p>
-                                The source - these are files related to uploaded
-                                datasets. You should <strong>
-                                    select a folder, where dataset folders are
-                                    located.
-                                </strong>
-                            </p>
                             <p>
                                 <strong>
                                     1. Press “Browse” button, and select a
@@ -116,9 +109,9 @@
                                 <Image fluid class="w-100" src={ov2_2} />
                             </p>
                             <p>
-                                The example of the path to a folder with
-                                datasets based on current structure and naming.
-                                Of course, you can name them on your own.
+                                Above is an example of how the required dataset
+                                folder structure, folder names can be specified
+                                by the user.
                                 <Image fluid class="w-100" src={ov2_3} />
                             </p>
                             <p><strong> 2. Add Master Metadata </strong></p>
