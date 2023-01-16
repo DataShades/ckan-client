@@ -58,7 +58,8 @@
                     return total;
                 }, total);
         }
-        return ((total.uploaded / (total.size + 1)) * 100).toFixed(0);
+        // Add one byte to both parts avoiding ZeroDivision
+        return (((total.uploaded + 1) / (total.size + 1)) * 100).toFixed(0);
     };
     $: everythingIsValid = $Source.datasets.every((d) =>
         $Flakes.ready.includes(d.name)

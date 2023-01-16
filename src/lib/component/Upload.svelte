@@ -33,6 +33,8 @@
   ).toFixed(0) : 0;
 </script>
 
+{JSON.stringify(details.data)}
+kkkk
 <div class="item-inner">
   {resource.name}
   <Button

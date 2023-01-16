@@ -26,6 +26,8 @@ const defaultMetadata = () => ({
   "publication_date": "<YYYY-MM-DD>",
   "tag_string": "tag-1,tag-2",
   "spatial_data": "yes|no",
+  "capture_method": "digitised|imported|fieldwork|exported",
+  "data_status": "completed|retired|superseded|partiallySuperseded|deprecated|draft",
   "license_id": "unspecified",
   // "spatial": "{\"type\": \"Polygon\", \"coordinates\": [[[151,-32],[152, -32],[152,-31]]]}",
   "dataset_status": "final|draft|updated",
