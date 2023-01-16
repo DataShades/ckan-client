@@ -166,7 +166,7 @@ impl FdpClient for CKAN {
 
                     .params(Params::Json(
 
-                        json!({"data": metadata.clone(), "dataset": &dataset.name, "name": &res.name}),
+                        json!({"data": metadata.clone(), "dataset": &dataset.name, "name": &res.name, "size": res.size}),
 
                     ));
 
