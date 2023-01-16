@@ -91,7 +91,6 @@ const fullUpload = async (finalize: boolean) => {
 const exhaustQueue = async () => {
 
   while (true) {
-    console.log("hello")
     let key = pop();
     if (!key) {
       break;
