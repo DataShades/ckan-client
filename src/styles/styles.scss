@@ -109,13 +109,16 @@ $header-height: 62px;
 
   .offcanvas-toggle-right {
     left: initial;
-    right: -$grid-gutter-width;
+    right: 56px;
     padding-left: 1rem;
     padding-right: calc($grid-gutter-width/2) + 1.5rem;
-    transition: padding-right .2s ease-in-out;
+    transition: all .2s ease-in-out;
     top: 0;
 
+    transform: translateX(100%);
     &:hover {
+
+      transform: translateX(80px);
       padding-left: 1rem;
       padding-right: $grid-gutter-width + 1.5rem;
     }

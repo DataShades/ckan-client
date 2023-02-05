@@ -1,7 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from "svelte";
   import type { TDataset } from "src/types";
-  import { humanizeSize } from "../../utils";
   import {
     Accordion,
     AccordionItem,
@@ -15,7 +14,7 @@
     CardText,
     CardTitle,
   } from "sveltestrap";
-  import { Source, Flakes, Queue } from "../../services";
+  import { Source, Queue } from "../../services";
   import { Resource } from ".";
   import NiceMetadata from "./NiceMetadata.svelte";
 
@@ -27,10 +26,7 @@
 
   $: nErrors = validated ? Object.keys(validated.extras.errors).length : 0;
 
-  $: size = humanizeSize(
-    dataset.resources.reduce((total, r) => total + (r.size || 0), 0)
-  );
-  $: nResourcesWithoutMetadata = dataset.resources.filter(
+ $: nResourcesWithoutMetadata = dataset.resources.filter(
     (r) => !r.metadata
   ).length;
   let uploading: number = 0;
@@ -127,17 +123,6 @@
       on:click={() => dispatch("validate", { dataset })}
     >
       Validate
-    </Button>
-
-    <Button
-      color="primary"
-      class="ms-2"
-      disabled={!dataset.metadata ||
-        uploading >= dataset.resources.length ||
-        !$Flakes.ready.includes(dataset.name)}
-      on:click={() => dispatch("upload", { dataset })}
-    >
-      Upload({size})
     </Button>
   </CardFooter>
 </Card>

@@ -4,6 +4,7 @@ import DatasetErrors from "./DatasetErrors.svelte";
 import Upload from "./Upload.svelte";
 import Uploads from "./Uploads.svelte";
 import Manual from "./Manual.svelte";
+
 import NiceMetadata from "./NiceMetadata.svelte";
 import DatasetsProgress from "./DatasetsProgress.svelte";
 export {

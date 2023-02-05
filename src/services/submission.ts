@@ -36,7 +36,6 @@ const finalize = async () => {
   await refresh();
   Source.change("");
   Project.reset(get(User));
-  navigate("/project");
 };
 
 const progressUpload = async (dataset: string, name: string, part: number) => {

@@ -18,8 +18,6 @@
     Spinner,
     Button,
     Container,
-    Col,
-    Row,
   } from "sveltestrap";
 
   export let pending = false;
@@ -109,8 +107,8 @@
       field into Log in screen of the app.
     </p>
     <Button color="primary" on:click={toggleModal}>Back to Login</Button>
-    <a class="btn btn-outline-primary" href={fdpUrl} target="_blank"
-      >Go to Flood Data Portal</a
-    >
+    <a class="btn btn-outline-primary" href={fdpUrl} target="_blank">
+      Go to Flood Data Portal
+    </a>
   </ModalBody>
 </Modal>

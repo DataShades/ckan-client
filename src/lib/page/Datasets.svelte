@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { TDataset } from "src/types";
-  import { humanizeSize } from "../../utils";
 
   import {
     Accordion,
@@ -16,8 +15,8 @@
     Container,
   } from "sveltestrap";
 
-  import { Source, Flakes, Submission, Queue } from "../../services";
-  import { Dataset, NiceMetadata, Uploads } from "../component";
+  import { Source, Flakes, Submission } from "../../services";
+  import { Dataset, NiceMetadata } from "../component";
   import DatasetErrors from "../component/DatasetErrors.svelte";
 
   let pending: string | null = null;
@@ -38,27 +37,11 @@
     }
     pending = null;
   };
-  const upload = async (dataset: TDataset) => {
-    dataset.resources.forEach((r) => Queue.add(dataset, r));
-    Queue.process();
-  };
-  $: totalSize = humanizeSize(
-    $Source.datasets.reduce(
-      (total: number, d: TDataset) =>
-        total + d.resources.reduce((total, r) => total + (r.size || 0), 0),
-      0
-    )
-  );
   $: totalErrors = Object.keys($Flakes.datasets)
-    .filter((k) => $Flakes.notReady.includes(k) || console.log(k))
+    .filter((k) => $Flakes.notReady.includes(k))
     .map((k) => Object.keys($Flakes.datasets[k].extras.errors).length)
     .reduce((t, n) => t + n, 0);
-  $: everythingIsValid = $Source.datasets.every((d) =>
-    $Flakes.ready.includes(d.name)
-  );
 </script>
-
-<Uploads on:upload={(e) => upload(e.detail.dataset)} />
 <Container class="validate-page">
   <h2 class="page-title">Validate datasets and upload</h2>
   <p>After successful validation, upload your datasets to the portal</p>
@@ -69,17 +52,6 @@
       on:click={() => Submission.validateEverything()}
     >
       Validate all
-    </Button>
-    <Button
-      color="primary"
-      class="ms-2"
-      disabled={!$Source.datasets.length ||
-        !everythingIsValid ||
-        $Queue.processing}
-      on:click={async () => Queue.fullUpload(false)}
-    >
-      <!-- on:click={() => Queue.clear()} -->
-      Upload all ({totalSize})
     </Button>
   </p>
   <Card>
@@ -108,7 +80,7 @@
     </CardHeader>
     <CardBody>
       <CardText>
-        {#if totalErrors}
+        {#if $Flakes.notReady.length}
           {#each $Source.datasets as dataset}
             <DatasetErrors
               {dataset}
@@ -151,7 +123,6 @@
         validated={$Flakes.datasets[dataset.name]}
         pending={pending === dataset.name}
         on:validate={(e) => validate(e.detail.dataset)}
-        on:upload={(e) => upload(e.detail.dataset)}
       />
     {/each}
   </div>

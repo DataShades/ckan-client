@@ -9,6 +9,7 @@ import Submission from "./submission";
 const store = writable({
   items: new Map<string, [TDataset, TResource]>(),
   processing: false,
+  finalized: false,
 });
 
 const add = (dataset: TDataset, resource: TResource) => {
@@ -85,11 +86,11 @@ const fullUpload = async (finalize: boolean) => {
   await process();
   if (!_incomplete().length && finalize) {
     await Submission.finalize();
+    store.update((queue) => ({ ...queue, finalized: true }));
   }
 };
 
 const exhaustQueue = async () => {
-
   while (true) {
     let key = pop();
     if (!key) {
@@ -114,6 +115,9 @@ const exhaustQueue = async () => {
   }
 };
 
+const unfinalize = () => {
+  store.update((queue) => ({ ...queue, finalized: false }));
+};
 export default {
   subscribe: store.subscribe,
   add,
@@ -123,4 +127,5 @@ export default {
   process,
   fullUpload,
   clear,
+  unfinalize
 };
