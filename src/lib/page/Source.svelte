@@ -110,7 +110,7 @@ import { NiceMetadata } from "../component";
         <Button
           color="primary"
           outline
-          on:click={() => Source.open("metadata.toml")}
+          on:click={() => Source.open("metadata.csv")}
         >
           Open metadata in editor
         </Button>

@@ -41,12 +41,14 @@ const store = derived([Submission, Source], ([flakes, source], set) => {
       )
     }
   ).map(d => d.name)
+  const notReady = source.datasets.filter(d => !ready.includes(d.name)).map(d => d.name);
   set({
     uploads,
     datasets,
     resources,
-    ready
+    ready,
+    notReady
   });
-}, { uploads: {}, datasets: {}, resources: {}, ready: [] })
+}, { uploads: {}, datasets: {}, resources: {}, ready: [], notReady: [] })
 
 export default store

@@ -298,12 +298,15 @@ $header-height: 62px;
 .dataset-card {
   background: $light-grey;
 
-  >.card-header,
-  >.card-footer {
-    background: transparent;
+  &:not(.bordered)>.card-header,
+  &:not(.bordered)>.card-footer {
     border: none;
   }
 
+  >.card-header,
+  >.card-footer {
+    background: transparent;
+  }
   .card-subtitle {
     font-weight: 600;
     font-size: 1.125rem;
@@ -312,7 +315,6 @@ $header-height: 62px;
   .card-header {
     font-size: 1.125rem;
     font-weight: 600;
-    padding-bottom: 0;
 
     .btn-link {
       background: none;

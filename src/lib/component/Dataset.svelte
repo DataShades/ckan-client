@@ -25,6 +25,8 @@
   export let validated: any | null;
   export let pending: boolean;
 
+  $: nErrors = validated ? Object.keys(validated.extras.errors).length : 0;
+
   $: size = humanizeSize(
     dataset.resources.reduce((total, r) => total + (r.size || 0), 0)
   );
@@ -39,6 +41,7 @@
   });
 </script>
 
+<span id={btoa(dataset.name)}></span>
 <Card class="mb-3 dataset-card">
   <CardHeader>
     <CardTitle>
@@ -59,6 +62,10 @@
           {#if !dataset.metadata}
             <span class="badge bg-danger bg-opacity-25 text-black ms-3">
               Metadata is missing
+            </span>
+          {:else if nErrors}
+            <span class="badge bg-danger bg-opacity-25 text-black ms-3">
+              {nErrors} error{nErrors > 1 ? "s" : ""}
             </span>
           {/if}
         </div>
@@ -110,31 +117,6 @@
           {/each}
         </CardText>
       </AccordionItem>
-      <Card class="mt-4">
-        <CardHeader>
-          <CardTitle>Validation Errors</CardTitle>
-        </CardHeader>
-        <CardBody>
-          <CardText>
-            {#if !dataset.metadata}
-              <Alert color="danger">Create metadata to validate it.</Alert>
-            {:else if !validated}
-              <Alert color="warning">Nothing validated yet.</Alert>
-            {:else if Object.keys(validated.extras.errors).length}
-              {#each Object.entries(validated.extras.errors) as [field, errors]}
-                <Alert color="danger">
-                  <strong>
-                    {field}
-                  </strong>:
-                  {errors.join(";")}
-                </Alert>
-              {/each}
-            {:else}
-              <Alert color="success">All files are valid.</Alert>
-            {/if}
-          </CardText>
-        </CardBody>
-      </Card>
     </Accordion>
   </CardBody>
   <CardFooter>
