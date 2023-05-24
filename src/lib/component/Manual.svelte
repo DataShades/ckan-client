@@ -89,7 +89,7 @@
             <AccordionItem active={$Manual.active === 2}>
               <span slot="header">
                 <span class="step-circle">2</span>
-                Select folder containing dataset folders
+                Select folder containing dataset folders and metadata
               </span>
               <p>
                 <strong>
@@ -109,11 +109,11 @@
               <p><strong> 2. Add Master Metadata </strong></p>
               <Alert color="primary">The most important file to create.</Alert>
               <p>
-                If your project folder already have the metadata, you will see
-                it below the browse input. Otherwise, you will show a message,
-                where the app proposes you create metadata automatically. An
-                automatically created metadata must be edited this or in the
-                next step.
+                If your project folder already has <code>metadata.csv</code> file
+                with the metadata, you will see it below the browse input. Otherwise,
+                you will show a message, where the app proposes you create metadata
+                automatically. An automatically created metadata must be edited this
+                or in the next step.
               </p>
               <p>
                 <strong>Case 1:</strong>

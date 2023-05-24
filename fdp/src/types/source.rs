@@ -69,9 +69,12 @@ pub fn dataset_comments() -> HashMap<String, Vec<String>> {
         ),
         (
             "publication_date".into(),
-            vec!["Date in YYYY-MM-DD format: 2022-11-24".into()],
+            vec![
+                "Date in YYYY-MM-DD format: 2022-11-24".into(),
+                " (note this is not a native excel format so user will need to include a apostrophe (') before the date)".into()
+                ],
         ),
-        ("tag_string".into(), vec!["Comma-separated tags".into()]),
+        ("tag_string".into(), vec!["Comma-separated tags of key words".into()]),
         ("spatial_data".into(), vec!["Either 'yes' or 'no'".into()]),
         ("capture_method".into(), vec![
             "The method by which the spatial data was created; digitised and/or exported from a model".into(),
@@ -112,7 +115,6 @@ pub fn dataset_comments() -> HashMap<String, Vec<String>> {
             vec!["One of: daily, weekly, monthly, quarterly, yearly, as_required".into()],
         ),
         ("author".into(), vec!["The name of the author".into()]),
-        ("url".into(), vec!["Source URL of the dataset".into()]),
         ("data_comment".into(), vec!["Comment to the dataset".into()]),
         (
             "access_level".into(),
@@ -125,7 +127,7 @@ pub fn resource_comments() -> HashMap<String, Vec<String>> {
     HashMap::from([
         (
             "name".into(),
-            vec!["Human-readable name of the resource".into()],
+            vec!["Easily understood filename of the resource".into()],
         ),
         (
             "description".into(),
@@ -374,8 +376,9 @@ impl Metadata {
                     "Dataset Field",
                     "Description",
                     "Master metadata",
-                    "Dataset 1",
-                    "Dataset 2",
+                    "foldername1",
+                    "foldername2",
+                    "(include a column for every data set folder)",
                 ])?;
                 match v {
                     Value::Object(v) => {
@@ -387,8 +390,9 @@ impl Metadata {
                                     Value::String(s) => s,
                                     _ => "",
                                 },
-                                "Value for Dataset 1",
-                                "Value for Dataset 2",
+                                "",
+                                "",
+                                "",
                             ])?;
                         }
                     }
@@ -398,15 +402,17 @@ impl Metadata {
                     "Resource Field",
                     "Description",
                     "",
-                    "Resource 1 from Dataset 1.txt",
-                    "Resource 1 from Dataset 2.json",
+                    "actual filename (incuding extension)",
+                    "actual filename (incuding extension)",
+                    "",
                 ])?;
                 wtr.write_record(&[
                     "name",
-                    "Human-readable name of the resource",
+                    "Easily understood filename of the resource",
                     "",
-                    "Value for Resource 1",
-                    "Value for Resource 1",
+                    "",
+                    "",
+                    "",
                 ])?;
                 wtr.write_record(&[
                     "description",
@@ -414,21 +420,40 @@ impl Metadata {
                     description = \"\"\"Roses are red\n\
                     Violets are blue\"\"\"",
                     "",
-                    "Value for Resource 1",
-                    "Value for Resource 1",
+                    "",
+                    "",
+                    "",
                 ])?;
                 wtr.write_record(&[
+                    "format",
+                    "File extension, e.g XML, CSV, ZIP",
+                    "",
+                    "",
+                    "",
+                    "",
+                ])?;
+                 wtr.write_record(&[
+                    "format_label",
+                    "Label for Resource format. One of:\n  * Word\n  * Excel\n  * Point\n  * Text\n  * CSV\n  * PDF\n  * Zipped\n  * Image\n  * GIS\n  * Model\n  * MISC",
+                    "",
+                    "",
+                    "",
+                    "",
+                ])?;
+                 wtr.write_record(&[
                     "Resource Field",
                     "Description",
                     "",
-                    "Resource 2 from Dataset 1.csv",
+                    "actual filename (incuding extension)",
+                    "",
                     "",
                 ])?;
                 wtr.write_record(&[
                     "name",
-                    "Human-readable name of the resource",
+                    "Easily understood filename of the resource",
                     "",
-                    "Value for Resource 2",
+                    "",
+                    "",
                     "",
                 ])?;
                 wtr.write_record(&[
@@ -437,7 +462,33 @@ impl Metadata {
                     description = \"\"\"Roses are red\n\
                     Violets are blue\"\"\"",
                     "",
-                    "Value for Resource 2",
+                    "",
+                    "",
+                    "",
+                ])?;
+                wtr.write_record(&[
+                    "format",
+                    "File extension, e.g XML, CSV, ZIP",
+                    "",
+                    "",
+                    "",
+                    "",
+                ])?;
+                 wtr.write_record(&[
+                    "format_label",
+                    "Label for Resource format. One of:\n  * Word\n  * Excel\n  * Point\n  * Text\n  * CSV\n  * PDF\n  * Zipped\n  * Image\n  * GIS\n  * Model\n  * MISC",
+                    "",
+                    "",
+                    "",
+                    "",
+                ])?;
+
+                wtr.write_record(&[
+                    "repeat 'Resource Field', 'name', 'description' rows as a group for each resource to be uploaded to a dataset",
+                    "",
+                    "",
+                    "",
+                    "",
                     "",
                 ])?;
 
@@ -452,18 +503,18 @@ impl Metadata {
     }
 
     fn for_source(path: &PathBuf) -> Self {
-        Metadata::extract_key_from_csv(path, MetadataContent::Master)
+        Metadata::extract_key_from_csv(path, MetadataContent::Master, true)
     }
 
     fn for_dataset(path: &PathBuf, name: &str) -> Self {
-        Metadata::extract_key_from_csv(path, MetadataContent::Dataset(name))
+        Metadata::extract_key_from_csv(path, MetadataContent::Dataset(name), false)
     }
 
     fn for_resource(path: &PathBuf, dataset: &OsStr, name: &str) -> Self {
-        Metadata::extract_key_from_csv(path, MetadataContent::Resource(dataset, name))
+        Metadata::extract_key_from_csv(path, MetadataContent::Resource(dataset, name), false)
     }
 
-    fn extract_key_from_csv(path: &PathBuf, key: MetadataContent) -> Self {
+    fn extract_key_from_csv(path: &PathBuf, key: MetadataContent, include_empty: bool) -> Self {
         if path.is_file() {
             let mut reader = csv::Reader::from_path(path).unwrap();
 
@@ -504,7 +555,7 @@ impl Metadata {
 
                     let data = pairs
                         .iter()
-                        .filter(|(_, v)| *v != "")
+                        .filter(|(_, v)| *v != "" || include_empty)
                         .map(|(k, v)| (k.to_string(), Value::from(v.to_string())))
                         .collect();
 

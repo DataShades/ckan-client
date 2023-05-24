@@ -2,7 +2,7 @@
   import type { TDataset } from "src/types";
   import { navigate } from "svelte-routing";
   import { Button, Container } from "sveltestrap";
-  import { Flakes, Queue, Source } from "../../services";
+  import { Flakes, Queue, Source, Submission } from "../../services";
   import { Uploads } from "../component";
 
   const upload = async (dataset: TDataset) => {
@@ -30,6 +30,8 @@
       on:click={() => {
         navigate("/project");
         Queue.unfinalize();
+        Source.change("");
+        Submission.refresh()
       }}
       color="primary"
       class="mt-3"

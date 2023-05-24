@@ -49,6 +49,7 @@ const store = derived([Submission, Source], ([flakes, source], set) => {
     ready,
     notReady
   });
+
 }, { uploads: {}, datasets: {}, resources: {}, ready: [], notReady: [] })
 
 export default store
