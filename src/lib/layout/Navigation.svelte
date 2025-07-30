@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button, Container, Icon, Spinner } from "sveltestrap";
   import { link, navigate } from "svelte-routing";
-  import { Project, Flakes, Source, Queue } from "../../services";
+  import { Project, Flakes, Source, Queue, Submission, User } from "../../services";
   import { Manual } from "../component";
 
   export let step = 1;
@@ -28,6 +28,14 @@
       })
     );
   $: isCompleted = checkCompletion(...$Source.datasets);
+
+  function onFinish() {
+    navigate("/project");
+    Queue.unfinalize();
+    Source.change("");
+    Submission.refresh();
+    Project.reset($User);
+  }
 </script>
 
 <div class="w-100 progress-stepper">
@@ -40,13 +48,25 @@
           </span>
           Uploading...
         </li>
-      {:else if isCompleted || $Queue.finalized}
+      {:else if isCompleted || $Queue.finalized }
+        <li class:active={true} class="text-black d-flex flex-column gap-3 text-center">
+          <div>
+            <span class="step-circle">
+              <Icon name="check" />
+            </span>
+            Upload completed
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            To start uploading again, press
+            <Button
+              on:click={onFinish}
+              color="primary"
+              class="btn-sm"
+              >
+              finish
+            </Button>
 
-        <li class:active={true} class="text-black">
-          <span class="step-circle">
-            <Icon name="check" />
-          </span>
-          Upload completed
+          </div>
         </li>
       {:else}
         <li class:active={step === 1} class:available={available >= 1}>
@@ -99,6 +119,7 @@
 <div class="mt-4 main-page-content">
   <slot />
 </div>
+
 
 {#if !$Queue.processing && !isCompleted && !$Queue.finalized}
   <div class="progress-footer fixed-bottom">
