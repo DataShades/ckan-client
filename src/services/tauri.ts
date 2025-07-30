@@ -183,8 +183,6 @@ function fakeInvoke<T>(cmd: string, args?: InvokeArgs): Promise<any> {
       }
       break;
     case "register_upload":
-      debugger;
-
       return Promise.resolve({
         author_id: "e9036063-5a6b-47b7-b2b2-9d4b3bb1b7a4",
         data: {
