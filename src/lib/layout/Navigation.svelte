@@ -19,15 +19,17 @@
   $: everythingIsValid = $Source.datasets.every((d) =>
     $Flakes.ready.includes(d.name)
   );
-  const checkCompletion = (...datasets) =>
+  const checkCompletion = (notReady, ...datasets) =>
 
-    datasets.length && datasets.every((dataset) =>
-      dataset.resources.every((r) => {
+    !notReady.length && datasets.every((dataset) => {
+      return dataset.resources.every((r) => {
         const details = $Flakes.uploads[`${dataset.name}/${r.name}`];
         return details && details.data.completed;
       })
+    }
+      
     );
-  $: isCompleted = checkCompletion(...$Source.datasets);
+  $: isCompleted = checkCompletion($Flakes.notReady, ...$Source.datasets);
 
   function onFinish() {
     navigate("/project");
@@ -37,7 +39,6 @@
     Project.reset($User);
   }
 </script>
-
 <div class="w-100 progress-stepper">
   <Container>
     <ul class="d-flex justify-content-evenly list-inline mb-0">
@@ -48,7 +49,7 @@
           </span>
           Uploading...
         </li>
-      {:else if isCompleted || $Queue.finalized }
+      {:else if  $Queue.finalized }
         <li class:active={true} class="text-black d-flex flex-column gap-3 text-center">
           <div>
             <span class="step-circle">
@@ -121,7 +122,7 @@
 </div>
 
 
-{#if !$Queue.processing && !isCompleted && !$Queue.finalized}
+{#if !$Queue.processing && !$Queue.finalized}
   <div class="progress-footer fixed-bottom">
     <Container class="justify-content-between align-items-center d-flex">
       {#if step === 1}
