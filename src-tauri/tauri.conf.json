@@ -17,8 +17,6 @@
     "bundle": {
       "active": true,
       "category": "DeveloperTool",
-      "publisher": "NSW Government",
-      "copyright": "Copyright © 2026 NSW Government",
       "deb": {
         "depends": []
       },
@@ -31,6 +29,7 @@
         "icons/icon.ico"
       ],
       "identifier": "com.ld.ckanclient.fdp.dev",
+      "copyright": "Copyright © 2026 NSW Government",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
