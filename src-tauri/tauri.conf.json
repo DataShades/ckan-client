@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "FDP Bulk Upload Tool",
-    "version": "0.1.7"
+    "version": "0.1.8"
   },
   "tauri": {
     "allowlist": {
@@ -17,7 +17,8 @@
     "bundle": {
       "active": true,
       "category": "DeveloperTool",
-      "copyright": "",
+      "publisher": "NSW Government",
+      "copyright": "Copyright © 2026 NSW Government",
       "deb": {
         "depends": []
       },
@@ -42,9 +43,9 @@
       "shortDescription": "",
       "targets": "all",
       "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
+            "certificateThumbprint": "E6D7FAA4294D1A8ACCC31AB8BA31B9A8D8740403",
+            "digestAlgorithm": "sha256",
+            "timestampUrl": "http://timestamp.digicert.com"
       }
     },
     "security": {
